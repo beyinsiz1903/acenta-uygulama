@@ -6,8 +6,8 @@ import { Truck, Plus, Edit, Trash2, Wrench, Calendar, X } from "lucide-react";
 const VEHICLE_TYPES = [
   { value: "sedan", label: "Sedan" },
   { value: "minivan", label: "Minivan" },
-  { value: "minibus", label: "Minib\u00fcs" },
-  { value: "bus", label: "Otob\u00fcs" },
+  { value: "minibus", label: "Minibüs" },
+  { value: "bus", label: "Otobüs" },
   { value: "vip", label: "VIP" },
   { value: "suv", label: "SUV" },
 ];
@@ -90,18 +90,18 @@ export default function AdminVehiclesPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Truck className="w-7 h-7 text-emerald-600" /> Ara\u00e7 / Filo Y\u00f6netimi
+            <Truck className="w-7 h-7 text-emerald-600" /> Araç / Filo Yönetimi
           </h1>
-          <p className="text-gray-500 mt-1">Ara\u00e7lar\u0131, \u015fof\u00f6rleri ve bak\u0131m kay\u0131tlar\u0131n\u0131 y\u00f6netin</p>
+          <p className="text-gray-500 mt-1">Araçları, şoförleri ve bakım kayıtlarını yönetin</p>
         </div>
         <button onClick={() => { setEditItem(null); setShowForm(true); }} className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700">
-          <Plus className="w-4 h-4" /> Yeni Ara\u00e7
+          <Plus className="w-4 h-4" /> Yeni Araç
         </button>
       </div>
 
       {showForm && (
         <div className="bg-white border rounded-xl p-6 mb-6 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">{editItem ? "Ara\u00e7 D\u00fczenle" : "Yeni Ara\u00e7"}</h3>
+          <h3 className="text-lg font-semibold mb-4">{editItem ? "Araç Düzenle" : "Yeni Araç"}</h3>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <input name="plate_number" defaultValue={editItem?.plate_number || ""} placeholder="Plaka" className="border rounded-lg px-3 py-2" required />
             <select name="vehicle_type" defaultValue={editItem?.vehicle_type || "minibus"} className="border rounded-lg px-3 py-2">
@@ -109,23 +109,23 @@ export default function AdminVehiclesPage() {
             </select>
             <input name="brand" defaultValue={editItem?.brand || ""} placeholder="Marka" className="border rounded-lg px-3 py-2" />
             <input name="model" defaultValue={editItem?.model || ""} placeholder="Model" className="border rounded-lg px-3 py-2" />
-            <input name="year" type="number" defaultValue={editItem?.year || 2024} placeholder="Y\u0131l" className="border rounded-lg px-3 py-2" />
+            <input name="year" type="number" defaultValue={editItem?.year || 2024} placeholder="Yıl" className="border rounded-lg px-3 py-2" />
             <input name="capacity" type="number" defaultValue={editItem?.capacity || 0} placeholder="Kapasite" className="border rounded-lg px-3 py-2" />
             <input name="color" defaultValue={editItem?.color || ""} placeholder="Renk" className="border rounded-lg px-3 py-2" />
-            <input name="driver_name" defaultValue={editItem?.driver_name || ""} placeholder="\u015eof\u00f6r Ad\u0131" className="border rounded-lg px-3 py-2" />
-            <input name="driver_phone" defaultValue={editItem?.driver_phone || ""} placeholder="\u015eof\u00f6r Telefon" className="border rounded-lg px-3 py-2" />
+            <input name="driver_name" defaultValue={editItem?.driver_name || ""} placeholder="Şoför Adı" className="border rounded-lg px-3 py-2" />
+            <input name="driver_phone" defaultValue={editItem?.driver_phone || ""} placeholder="Şoför Telefon" className="border rounded-lg px-3 py-2" />
             <input name="insurance_expiry" type="date" defaultValue={editItem?.insurance_expiry || ""} className="border rounded-lg px-3 py-2" />
             <input name="inspection_expiry" type="date" defaultValue={editItem?.inspection_expiry || ""} className="border rounded-lg px-3 py-2" />
-            <input name="daily_cost" type="number" step="0.01" defaultValue={editItem?.daily_cost || 0} placeholder="G\u00fcnl\u00fck Maliyet" className="border rounded-lg px-3 py-2" />
+            <input name="daily_cost" type="number" step="0.01" defaultValue={editItem?.daily_cost || 0} placeholder="Günlük Maliyet" className="border rounded-lg px-3 py-2" />
             <select name="status" defaultValue={editItem?.status || "active"} className="border rounded-lg px-3 py-2">
               <option value="active">Aktif</option>
-              <option value="maintenance">Bak\u0131mda</option>
+              <option value="maintenance">Bakımda</option>
               <option value="inactive">Pasif</option>
             </select>
             <input name="notes" defaultValue={editItem?.notes || ""} placeholder="Notlar" className="border rounded-lg px-3 py-2 md:col-span-2" />
             <div className="flex gap-2 md:col-span-3">
               <button type="submit" className="bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700">Kaydet</button>
-              <button type="button" onClick={() => { setShowForm(false); setEditItem(null); }} className="bg-gray-200 px-6 py-2 rounded-lg">Vazge\u00e7</button>
+              <button type="button" onClick={() => { setShowForm(false); setEditItem(null); }} className="bg-gray-200 px-6 py-2 rounded-lg">Vazgeç</button>
             </div>
           </form>
         </div>
@@ -135,44 +135,44 @@ export default function AdminVehiclesPage() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={() => { setMaintenanceModal(null); setShowMaintForm(false); }}>
           <div className="bg-white rounded-xl p-6 w-full max-w-lg shadow-xl max-h-[70vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Bak\u0131m Kay\u0131tlar\u0131 — {maintVehicle?.plate_number}</h3>
+              <h3 className="text-lg font-semibold">Bakım Kayıtları — {maintVehicle?.plate_number}</h3>
               <button onClick={() => { setMaintenanceModal(null); setShowMaintForm(false); }} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
             </div>
 
             {!showMaintForm && (
               <button onClick={() => setShowMaintForm(true)} className="flex items-center gap-2 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-emerald-700 mb-4">
-                <Plus className="w-4 h-4" /> Bak\u0131m Ekle
+                <Plus className="w-4 h-4" /> Bakım Ekle
               </button>
             )}
 
             {showMaintForm && (
               <form onSubmit={handleMaintSubmit} className="bg-gray-50 rounded-lg p-4 mb-4 grid grid-cols-2 gap-3">
                 <select name="maintenance_type" className="border rounded-lg px-3 py-2 text-sm col-span-2">
-                  <option value="periodic">Periyodik Bak\u0131m</option>
-                  <option value="repair">Onar\u0131m</option>
-                  <option value="tire_change">Lastik De\u011fi\u015fimi</option>
-                  <option value="oil_change">Ya\u011f De\u011fi\u015fimi</option>
+                  <option value="periodic">Periyodik Bakım</option>
+                  <option value="repair">Onarım</option>
+                  <option value="tire_change">Lastik Değişimi</option>
+                  <option value="oil_change">Yağ Değişimi</option>
                   <option value="inspection">Muayene</option>
-                  <option value="other">Di\u011fer</option>
+                  <option value="other">Diğer</option>
                 </select>
                 <input name="date" type="date" className="border rounded-lg px-3 py-2 text-sm" required />
                 <input name="cost" type="number" step="0.01" placeholder="Maliyet" className="border rounded-lg px-3 py-2 text-sm" />
-                <input name="description" placeholder="A\u00e7\u0131klama" className="border rounded-lg px-3 py-2 text-sm col-span-2" />
-                <input name="next_maintenance_date" type="date" placeholder="Sonraki bak\u0131m" className="border rounded-lg px-3 py-2 text-sm" />
+                <input name="description" placeholder="Açıklama" className="border rounded-lg px-3 py-2 text-sm col-span-2" />
+                <input name="next_maintenance_date" type="date" placeholder="Sonraki bakım" className="border rounded-lg px-3 py-2 text-sm" />
                 <input name="mileage" placeholder="Kilometre" className="border rounded-lg px-3 py-2 text-sm" />
                 <div className="col-span-2 flex gap-2">
                   <button type="submit" className="bg-emerald-600 text-white px-4 py-1.5 rounded-lg text-sm">Kaydet</button>
-                  <button type="button" onClick={() => setShowMaintForm(false)} className="bg-gray-200 px-4 py-1.5 rounded-lg text-sm">Vazge\u00e7</button>
+                  <button type="button" onClick={() => setShowMaintForm(false)} className="bg-gray-200 px-4 py-1.5 rounded-lg text-sm">Vazgeç</button>
                 </div>
               </form>
             )}
 
             {maintLoading ? (
-              <div className="text-center py-8 text-gray-400">Y\u00fckleniyor...</div>
+              <div className="text-center py-8 text-gray-400">Yükleniyor...</div>
             ) : maintRecords.length === 0 ? (
               <div className="text-center py-8">
                 <Wrench className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-500 text-sm">Hen\u00fcz bak\u0131m kayd\u0131 yok</p>
+                <p className="text-gray-500 text-sm">Henüz bakım kaydı yok</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -204,11 +204,11 @@ export default function AdminVehiclesPage() {
               <button onClick={() => setCalendarModal(null)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
             </div>
             {calLoading ? (
-              <div className="text-center py-8 text-gray-400">Y\u00fckleniyor...</div>
+              <div className="text-center py-8 text-gray-400">Yükleniyor...</div>
             ) : calEvents.length === 0 ? (
               <div className="text-center py-8">
                 <Calendar className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-500 text-sm">Atanm\u0131\u015f g\u00f6rev yok</p>
+                <p className="text-gray-500 text-sm">Atanmış görev yok</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -228,11 +228,11 @@ export default function AdminVehiclesPage() {
       )}
 
       {isLoading ? (
-        <div className="text-center py-12 text-gray-400">Y\u00fckleniyor...</div>
+        <div className="text-center py-12 text-gray-400">Yükleniyor...</div>
       ) : items.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-xl border">
           <Truck className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500">Hen\u00fcz ara\u00e7 kayd\u0131 yok</p>
+          <p className="text-gray-500">Henüz araç kaydı yok</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -243,11 +243,11 @@ export default function AdminVehiclesPage() {
                   <h3 className="font-bold text-gray-900 text-lg">{item.plate_number}</h3>
                   <p className="text-sm text-gray-600">{item.brand} {item.model} ({item.year})</p>
                   <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${STATUS_COLORS[item.status] || STATUS_COLORS.inactive}`}>
-                    {item.status === "active" ? "Aktif" : item.status === "maintenance" ? "Bak\u0131mda" : "Pasif"}
+                    {item.status === "active" ? "Aktif" : item.status === "maintenance" ? "Bakımda" : "Pasif"}
                   </span>
                 </div>
                 <div className="flex gap-1">
-                  <button onClick={() => setMaintenanceModal(item.id)} className="text-yellow-600 hover:text-yellow-800 p-1" title="Bak\u0131m"><Wrench className="w-4 h-4" /></button>
+                  <button onClick={() => setMaintenanceModal(item.id)} className="text-yellow-600 hover:text-yellow-800 p-1" title="Bakım"><Wrench className="w-4 h-4" /></button>
                   <button onClick={() => setCalendarModal(item.id)} className="text-orange-500 hover:text-orange-700 p-1" title="Takvim"><Calendar className="w-4 h-4" /></button>
                   <button onClick={() => { setEditItem(item); setShowForm(true); }} className="text-blue-600 hover:text-blue-800 p-1"><Edit className="w-4 h-4" /></button>
                   <button onClick={() => { if (window.confirm("Silmek istediginize emin misiniz?")) deleteMut.mutate(item.id); }} className="text-red-500 hover:text-red-700 p-1"><Trash2 className="w-4 h-4" /></button>
@@ -255,11 +255,11 @@ export default function AdminVehiclesPage() {
               </div>
               <div className="text-sm text-gray-600 space-y-1">
                 <div>Tip: {VEHICLE_TYPES.find((t) => t.value === item.vehicle_type)?.label || item.vehicle_type}</div>
-                <div>Kapasite: {item.capacity} ki\u015fi</div>
-                {item.driver_name && <div>\u015eof\u00f6r: {item.driver_name}</div>}
+                <div>Kapasite: {item.capacity} kişi</div>
+                {item.driver_name && <div>Şoför: {item.driver_name}</div>}
               </div>
               <div className="flex items-center justify-between mt-3 pt-3 border-t text-sm text-gray-500">
-                <span>{item.daily_cost} {item.currency}/g\u00fcn</span>
+                <span>{item.daily_cost} {item.currency}/gün</span>
                 {item.insurance_expiry && <span>Sigorta: {item.insurance_expiry}</span>}
               </div>
             </div>

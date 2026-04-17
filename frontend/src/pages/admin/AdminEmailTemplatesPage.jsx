@@ -43,7 +43,7 @@ export default function AdminEmailTemplatesPage() {
   const handlePreview = async (item) => {
     try {
       const res = await api.post(`/admin/email-templates/${item.id}/preview`, {
-        data: { customer_name: "\u00d6rnek M\u00fc\u015fteri", reservation_code: "RSV-001", check_in: "2025-06-01", check_out: "2025-06-07", amount: "1500", currency: "EUR", quote_code: "QT-001" },
+        data: { customer_name: "Örnek Müşteri", reservation_code: "RSV-001", check_in: "2025-06-01", check_out: "2025-06-07", amount: "1500", currency: "EUR", quote_code: "QT-001" },
       });
       setPreviewHtml(res.data);
     } catch { }
@@ -56,16 +56,16 @@ export default function AdminEmailTemplatesPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Mail className="w-7 h-7 text-rose-600" /> E-posta \u015eablonlar\u0131
+            <Mail className="w-7 h-7 text-rose-600" /> E-posta Şablonları
           </h1>
-          <p className="text-gray-500 mt-1">Otomatik e-posta \u015fablonlar\u0131n\u0131 y\u00f6netin ve \u00f6n izleyin</p>
+          <p className="text-gray-500 mt-1">Otomatik e-posta şablonlarını yönetin ve ön izleyin</p>
         </div>
         <div className="flex gap-2">
           <button onClick={() => seedMut.mutate()} className="flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200">
-            <Zap className="w-4 h-4" /> Varsay\u0131lanlar\u0131 Y\u00fckle
+            <Zap className="w-4 h-4" /> Varsayılanları Yükle
           </button>
           <button onClick={() => { setEditItem(null); setShowForm(true); }} className="flex items-center gap-2 bg-rose-600 text-white px-4 py-2 rounded-lg hover:bg-rose-700">
-            <Plus className="w-4 h-4" /> Yeni \u015eablon
+            <Plus className="w-4 h-4" /> Yeni Şablon
           </button>
         </div>
       </div>
@@ -73,7 +73,7 @@ export default function AdminEmailTemplatesPage() {
       {previewHtml && (
         <div className="bg-white border rounded-xl p-6 mb-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">\u00d6n \u0130zleme</h3>
+            <h3 className="text-lg font-semibold">Ön İzleme</h3>
             <button onClick={() => setPreviewHtml(null)} className="text-gray-400 hover:text-gray-600">Kapat</button>
           </div>
           <div className="border-b pb-3 mb-3"><strong>Konu:</strong> {previewHtml.subject}</div>
@@ -83,32 +83,32 @@ export default function AdminEmailTemplatesPage() {
 
       {showForm && (
         <div className="bg-white border rounded-xl p-6 mb-6 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">{editItem ? "\u015eablon D\u00fczenle" : "Yeni \u015eablon"}</h3>
+          <h3 className="text-lg font-semibold mb-4">{editItem ? "Şablon Düzenle" : "Yeni Şablon"}</h3>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <input name="name" defaultValue={editItem?.name || ""} placeholder="\u015eablon Ad\u0131" className="border rounded-lg px-3 py-2" required />
-              <input name="key" defaultValue={editItem?.key || ""} placeholder="Anahtar (oto \u00fcretilir)" className="border rounded-lg px-3 py-2" />
+              <input name="name" defaultValue={editItem?.name || ""} placeholder="Şablon Adı" className="border rounded-lg px-3 py-2" required />
+              <input name="key" defaultValue={editItem?.key || ""} placeholder="Anahtar (oto üretilir)" className="border rounded-lg px-3 py-2" />
               <select name="trigger" defaultValue={editItem?.trigger || ""} className="border rounded-lg px-3 py-2">
-                <option value="">Tetikleyici Se\u00e7in</option>
+                <option value="">Tetikleyici Seçin</option>
                 <option value="reservation.confirmed">Rezervasyon Onay</option>
-                <option value="reservation.cancelled">Rezervasyon \u0130ptal</option>
-                <option value="reservation.reminder">Rezervasyon Hat\u0131rlatma</option>
-                <option value="payment.received">\u00d6deme Al\u0131nd\u0131</option>
-                <option value="payment.reminder">\u00d6deme Hat\u0131rlatma</option>
-                <option value="quote.sent">Teklif G\u00f6nderildi</option>
-                <option value="visa.status_changed">Vize Durum De\u011fi\u015fikli\u011fi</option>
+                <option value="reservation.cancelled">Rezervasyon İptal</option>
+                <option value="reservation.reminder">Rezervasyon Hatırlatma</option>
+                <option value="payment.received">Ödeme Alındı</option>
+                <option value="payment.reminder">Ödeme Hatırlatma</option>
+                <option value="quote.sent">Teklif Gönderildi</option>
+                <option value="visa.status_changed">Vize Durum Değişikliği</option>
                 <option value="transfer.confirmed">Transfer Onay</option>
-                <option value="welcome">Ho\u015f Geldiniz</option>
+                <option value="welcome">Hoş Geldiniz</option>
               </select>
             </div>
             <input name="subject" defaultValue={editItem?.subject || ""} placeholder="E-posta Konusu ({{degisken}} kullanabilirsiniz)" className="w-full border rounded-lg px-3 py-2" />
-            <textarea name="body_html" defaultValue={editItem?.body_html || ""} placeholder="HTML \u0130\u00e7erik ({{degisken}} kullanabilirsiniz)" className="w-full border rounded-lg px-3 py-2 h-40 font-mono text-sm" />
+            <textarea name="body_html" defaultValue={editItem?.body_html || ""} placeholder="HTML İçerik ({{degisken}} kullanabilirsiniz)" className="w-full border rounded-lg px-3 py-2 h-40 font-mono text-sm" />
             <div className="grid grid-cols-2 gap-4">
               <select name="language" defaultValue={editItem?.language || "tr"} className="border rounded-lg px-3 py-2">
-                <option value="tr">T\u00fcrk\u00e7e</option>
-                <option value="en">\u0130ngilizce</option>
+                <option value="tr">Türkçe</option>
+                <option value="en">İngilizce</option>
                 <option value="de">Almanca</option>
-                <option value="ru">Rus\u00e7a</option>
+                <option value="ru">Rusça</option>
               </select>
               <select name="is_active" defaultValue={String(editItem?.is_active ?? true)} className="border rounded-lg px-3 py-2">
                 <option value="true">Aktif</option>
@@ -117,19 +117,19 @@ export default function AdminEmailTemplatesPage() {
             </div>
             <div className="flex gap-2">
               <button type="submit" className="bg-rose-600 text-white px-6 py-2 rounded-lg hover:bg-rose-700">Kaydet</button>
-              <button type="button" onClick={() => { setShowForm(false); setEditItem(null); }} className="bg-gray-200 px-6 py-2 rounded-lg">Vazge\u00e7</button>
+              <button type="button" onClick={() => { setShowForm(false); setEditItem(null); }} className="bg-gray-200 px-6 py-2 rounded-lg">Vazgeç</button>
             </div>
           </form>
         </div>
       )}
 
       {isLoading ? (
-        <div className="text-center py-12 text-gray-400">Y\u00fckleniyor...</div>
+        <div className="text-center py-12 text-gray-400">Yükleniyor...</div>
       ) : items.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-xl border">
           <Mail className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500">Hen\u00fcz e-posta \u015fablonu yok</p>
-          <button onClick={() => seedMut.mutate()} className="mt-3 text-rose-600 hover:text-rose-800 text-sm font-medium">Varsay\u0131lan \u015fablonlar\u0131 y\u00fckle</button>
+          <p className="text-gray-500">Henüz e-posta şablonu yok</p>
+          <button onClick={() => seedMut.mutate()} className="mt-3 text-rose-600 hover:text-rose-800 text-sm font-medium">Varsayılan şablonları yükle</button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -141,7 +141,7 @@ export default function AdminEmailTemplatesPage() {
                   <p className="text-xs text-gray-500 mt-0.5">Tetikleyici: {item.trigger || "-"}</p>
                 </div>
                 <div className="flex gap-1">
-                  <button onClick={() => handlePreview(item)} className="text-gray-500 hover:text-gray-700 p-1" title="\u00d6n izle"><Eye className="w-4 h-4" /></button>
+                  <button onClick={() => handlePreview(item)} className="text-gray-500 hover:text-gray-700 p-1" title="Ön izle"><Eye className="w-4 h-4" /></button>
                   <button onClick={() => { setEditItem(item); setShowForm(true); }} className="text-blue-600 hover:text-blue-800 p-1"><Edit className="w-4 h-4" /></button>
                   <button onClick={() => { if (window.confirm("Silmek istediginize emin misiniz?")) deleteMut.mutate(item.id); }} className="text-red-500 hover:text-red-700 p-1"><Trash2 className="w-4 h-4" /></button>
                 </div>

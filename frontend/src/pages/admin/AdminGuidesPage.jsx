@@ -66,9 +66,9 @@ export default function AdminGuidesPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <UserCheck className="w-7 h-7 text-indigo-600" /> Rehber Y\u00f6netimi
+            <UserCheck className="w-7 h-7 text-indigo-600" /> Rehber Yönetimi
           </h1>
-          <p className="text-gray-500 mt-1">Tur rehberlerini y\u00f6netin, atay\u0131n ve performanslar\u0131n\u0131 takip edin</p>
+          <p className="text-gray-500 mt-1">Tur rehberlerini yönetin, atayın ve performanslarını takip edin</p>
         </div>
         <button onClick={() => { setEditItem(null); setShowForm(true); }} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
           <Plus className="w-4 h-4" /> Yeni Rehber
@@ -77,25 +77,25 @@ export default function AdminGuidesPage() {
 
       {showForm && (
         <div className="bg-white border rounded-xl p-6 mb-6 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">{editItem ? "Rehber D\u00fczenle" : "Yeni Rehber"}</h3>
+          <h3 className="text-lg font-semibold mb-4">{editItem ? "Rehber Düzenle" : "Yeni Rehber"}</h3>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <input name="name" defaultValue={editItem?.name || ""} placeholder="Ad Soyad" className="border rounded-lg px-3 py-2" required />
             <input name="phone" defaultValue={editItem?.phone || ""} placeholder="Telefon" className="border rounded-lg px-3 py-2" />
             <input name="email" defaultValue={editItem?.email || ""} placeholder="E-posta" className="border rounded-lg px-3 py-2" />
-            <input name="languages" defaultValue={editItem?.languages?.join(", ") || ""} placeholder="Diller (virg\u00fclle ay\u0131r\u0131n)" className="border rounded-lg px-3 py-2" />
-            <input name="specialties" defaultValue={editItem?.specialties?.join(", ") || ""} placeholder="Uzmanl\u0131k Alanlar\u0131" className="border rounded-lg px-3 py-2" />
+            <input name="languages" defaultValue={editItem?.languages?.join(", ") || ""} placeholder="Diller (virgülle ayırın)" className="border rounded-lg px-3 py-2" />
+            <input name="specialties" defaultValue={editItem?.specialties?.join(", ") || ""} placeholder="Uzmanlık Alanları" className="border rounded-lg px-3 py-2" />
             <input name="license_number" defaultValue={editItem?.license_number || ""} placeholder="Rehber Belgesi No" className="border rounded-lg px-3 py-2" />
             <input name="license_expiry" type="date" defaultValue={editItem?.license_expiry || ""} className="border rounded-lg px-3 py-2" />
-            <input name="daily_rate" type="number" step="0.01" defaultValue={editItem?.daily_rate || 0} placeholder="G\u00fcnl\u00fck \u00dccret" className="border rounded-lg px-3 py-2" />
+            <input name="daily_rate" type="number" step="0.01" defaultValue={editItem?.daily_rate || 0} placeholder="Günlük Ücret" className="border rounded-lg px-3 py-2" />
             <select name="status" defaultValue={editItem?.status || "active"} className="border rounded-lg px-3 py-2">
               <option value="active">Aktif</option>
               <option value="inactive">Pasif</option>
-              <option value="on_leave">\u0130zinli</option>
+              <option value="on_leave">İzinli</option>
             </select>
             <input name="notes" defaultValue={editItem?.notes || ""} placeholder="Notlar" className="border rounded-lg px-3 py-2 md:col-span-2" />
             <div className="flex gap-2 md:col-span-3">
               <button type="submit" className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700">Kaydet</button>
-              <button type="button" onClick={() => { setShowForm(false); setEditItem(null); }} className="bg-gray-200 px-6 py-2 rounded-lg">Vazge\u00e7</button>
+              <button type="button" onClick={() => { setShowForm(false); setEditItem(null); }} className="bg-gray-200 px-6 py-2 rounded-lg">Vazgeç</button>
             </div>
           </form>
         </div>
@@ -109,11 +109,11 @@ export default function AdminGuidesPage() {
               <button onClick={() => setCalendarModal(null)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
             </div>
             {calLoading ? (
-              <div className="text-center py-8 text-gray-400">Y\u00fckleniyor...</div>
+              <div className="text-center py-8 text-gray-400">Yükleniyor...</div>
             ) : calEvents.length === 0 ? (
               <div className="text-center py-8">
                 <Calendar className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-500 text-sm">Atanm\u0131\u015f g\u00f6rev yok</p>
+                <p className="text-gray-500 text-sm">Atanmış görev yok</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -158,18 +158,18 @@ export default function AdminGuidesPage() {
             </div>
             <div className="flex gap-2">
               <button onClick={() => rateMut.mutate({ id: ratingModal, rating: ratingValue, comment: ratingComment })} className="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700">Puanla</button>
-              <button onClick={() => setRatingModal(null)} className="bg-gray-200 px-4 py-2 rounded-lg">Vazge\u00e7</button>
+              <button onClick={() => setRatingModal(null)} className="bg-gray-200 px-4 py-2 rounded-lg">Vazgeç</button>
             </div>
           </div>
         </div>
       )}
 
       {isLoading ? (
-        <div className="text-center py-12 text-gray-400">Y\u00fckleniyor...</div>
+        <div className="text-center py-12 text-gray-400">Yükleniyor...</div>
       ) : items.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-xl border">
           <UserCheck className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500">Hen\u00fcz rehber kayd\u0131 yok</p>
+          <p className="text-gray-500">Henüz rehber kaydı yok</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -179,7 +179,7 @@ export default function AdminGuidesPage() {
                 <div>
                   <h3 className="font-semibold text-gray-900">{item.name}</h3>
                   <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${STATUS_COLORS[item.status] || STATUS_COLORS.inactive}`}>
-                    {item.status === "active" ? "Aktif" : item.status === "on_leave" ? "\u0130zinli" : "Pasif"}
+                    {item.status === "active" ? "Aktif" : item.status === "on_leave" ? "İzinli" : "Pasif"}
                   </span>
                 </div>
                 <div className="flex gap-1">
@@ -203,7 +203,7 @@ export default function AdminGuidesPage() {
                   <span className="text-sm font-medium">{item.rating || 0}/5</span>
                   {item.rating_count > 0 && <span className="text-xs text-gray-400">({item.rating_count})</span>}
                 </div>
-                <span className="text-sm text-gray-500">{item.daily_rate} {item.currency}/g\u00fcn</span>
+                <span className="text-sm text-gray-500">{item.daily_rate} {item.currency}/gün</span>
               </div>
             </div>
           ))}

@@ -12,8 +12,8 @@ const STATUS_COLORS = {
 
 const STATUS_LABELS = {
   active: "Aktif",
-  expired: "S\u00fcresi Dolmu\u015f",
-  cancelled: "\u0130ptal",
+  expired: "Süresi Dolmuş",
+  cancelled: "İptal",
   pending: "Beklemede",
 };
 
@@ -41,7 +41,7 @@ function CustomerSearch({ value, onChange, customers }) {
         className="border rounded-lg px-3 py-2 cursor-pointer flex items-center justify-between"
       >
         <span className={selected ? "text-gray-900" : "text-gray-400"}>
-          {selected ? `${selected.name} (${selected.email || ""})` : "M\u00fc\u015fteri Se\u00e7in"}
+          {selected ? `${selected.name} (${selected.email || ""})` : "Müşteri Seçin"}
         </span>
         <Search className="w-4 h-4 text-gray-400" />
       </div>
@@ -58,7 +58,7 @@ function CustomerSearch({ value, onChange, customers }) {
             />
           </div>
           {filtered.length === 0 && (
-            <div className="p-3 text-sm text-gray-500">Sonu\u00e7 bulunamad\u0131</div>
+            <div className="p-3 text-sm text-gray-500">Sonuç bulunamadı</div>
           )}
           {filtered.map((c) => (
             <button
@@ -67,7 +67,7 @@ function CustomerSearch({ value, onChange, customers }) {
               className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 ${c.id === value ? "bg-blue-50" : ""}`}
             >
               <div className="font-medium">{c.name}</div>
-              <div className="text-xs text-gray-500">{c.email} {c.phone ? `\u00b7 ${c.phone}` : ""}</div>
+              <div className="text-xs text-gray-500">{c.email} {c.phone ? `· ${c.phone}` : ""}</div>
             </button>
           ))}
         </div>
@@ -126,7 +126,7 @@ export default function AdminInsurancePage() {
       body.customer_name = selectedCustomer.name;
     }
     if (!editItem && !body.customer_id) {
-      alert("L\u00fctfen bir m\u00fc\u015fteri se\u00e7in");
+      alert("Lütfen bir müşteri seçin");
       return;
     }
     if (editItem) patchMut.mutate({ id: editItem.id, body });
@@ -148,28 +148,28 @@ export default function AdminInsurancePage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Shield className="w-7 h-7 text-teal-600" /> Sigorta Y\u00f6netimi
+            <Shield className="w-7 h-7 text-teal-600" /> Sigorta Yönetimi
           </h1>
-          <p className="text-gray-500 mt-1">Seyahat sigortas\u0131 poli\u00e7elerini y\u00f6netin</p>
+          <p className="text-gray-500 mt-1">Seyahat sigortası poliçelerini yönetin</p>
         </div>
         <button onClick={() => { setEditItem(null); setSelectedCustomer(null); setShowForm(true); }} className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700">
-          <Plus className="w-4 h-4" /> Yeni Poli\u00e7e
+          <Plus className="w-4 h-4" /> Yeni Poliçe
         </button>
       </div>
 
       <div className="flex gap-3 mb-4">
         <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="border rounded-lg px-3 py-2 text-sm">
-          <option value="">T\u00fcm Durumlar</option>
+          <option value="">Tüm Durumlar</option>
           {Object.entries(STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
       </div>
 
       {showForm && (
         <div className="bg-white border rounded-xl p-6 mb-6 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">{editItem ? "Poli\u00e7e D\u00fczenle" : "Yeni Sigorta Poli\u00e7esi"}</h3>
+          <h3 className="text-lg font-semibold mb-4">{editItem ? "Poliçe Düzenle" : "Yeni Sigorta Poliçesi"}</h3>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">M\u00fc\u015fteri</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Müşteri</label>
               <CustomerSearch
                 value={selectedCustomer?.id || editItem?.customer_id || ""}
                 onChange={(c) => setSelectedCustomer(c)}
@@ -177,18 +177,18 @@ export default function AdminInsurancePage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">M\u00fc\u015fteri Ad\u0131</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Müşteri Adı</label>
               <input name="customer_name" value={selectedCustomer?.name || editItem?.customer_name || ""} readOnly className="border rounded-lg px-3 py-2 w-full bg-gray-50" />
             </div>
             <select name="policy_type" defaultValue={editItem?.policy_type || "travel"} className="border rounded-lg px-3 py-2">
               <option value="travel">Seyahat</option>
-              <option value="health">Sa\u011fl\u0131k</option>
-              <option value="cancellation">\u0130ptal</option>
+              <option value="health">Sağlık</option>
+              <option value="cancellation">İptal</option>
               <option value="baggage">Bagaj</option>
-              <option value="comprehensive">Kapsaml\u0131</option>
+              <option value="comprehensive">Kapsamlı</option>
             </select>
             <select name="provider" defaultValue={editItem?.provider || ""} className="border rounded-lg px-3 py-2">
-              <option value="">Sa\u011flay\u0131c\u0131 Se\u00e7in</option>
+              <option value="">Sağlayıcı Seçin</option>
               <option value="Mapfre">Mapfre</option>
               <option value="Allianz">Allianz</option>
               <option value="Axa">Axa</option>
@@ -196,11 +196,11 @@ export default function AdminInsurancePage() {
               <option value="Groupama">Groupama</option>
               <option value="HDI">HDI</option>
             </select>
-            <input name="policy_number" defaultValue={editItem?.policy_number || ""} placeholder="Poli\u00e7e No" className="border rounded-lg px-3 py-2" />
+            <input name="policy_number" defaultValue={editItem?.policy_number || ""} placeholder="Poliçe No" className="border rounded-lg px-3 py-2" />
             <input name="destination" defaultValue={editItem?.destination || ""} placeholder="Destinasyon" className="border rounded-lg px-3 py-2" />
             <input name="start_date" type="date" defaultValue={editItem?.start_date || ""} className="border rounded-lg px-3 py-2" required />
             <input name="end_date" type="date" defaultValue={editItem?.end_date || ""} className="border rounded-lg px-3 py-2" required />
-            <input name="coverage_amount" type="number" step="0.01" defaultValue={editItem?.coverage_amount || 0} placeholder="Teminat Tutar\u0131" className="border rounded-lg px-3 py-2" />
+            <input name="coverage_amount" type="number" step="0.01" defaultValue={editItem?.coverage_amount || 0} placeholder="Teminat Tutarı" className="border rounded-lg px-3 py-2" />
             <input name="premium" type="number" step="0.01" defaultValue={editItem?.premium || 0} placeholder="Prim" className="border rounded-lg px-3 py-2" />
             <select name="status" defaultValue={editItem?.status || "active"} className="border rounded-lg px-3 py-2">
               {Object.entries(STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
@@ -208,31 +208,31 @@ export default function AdminInsurancePage() {
             <input name="notes" defaultValue={editItem?.notes || ""} placeholder="Notlar" className="border rounded-lg px-3 py-2" />
             <div className="flex gap-2 md:col-span-3">
               <button type="submit" className="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700">Kaydet</button>
-              <button type="button" onClick={() => { setShowForm(false); setEditItem(null); setSelectedCustomer(null); }} className="bg-gray-200 px-6 py-2 rounded-lg">Vazge\u00e7</button>
+              <button type="button" onClick={() => { setShowForm(false); setEditItem(null); setSelectedCustomer(null); }} className="bg-gray-200 px-6 py-2 rounded-lg">Vazgeç</button>
             </div>
           </form>
         </div>
       )}
 
       {isLoading ? (
-        <div className="text-center py-12 text-gray-400">Y\u00fckleniyor...</div>
+        <div className="text-center py-12 text-gray-400">Yükleniyor...</div>
       ) : items.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-xl border">
           <Shield className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500">Hen\u00fcz sigorta poli\u00e7esi yok</p>
+          <p className="text-gray-500">Henüz sigorta poliçesi yok</p>
         </div>
       ) : (
         <div className="bg-white rounded-xl border overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Poli\u00e7e</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">M\u00fc\u015fteri</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Sa\u011flay\u0131c\u0131</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">Poliçe</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">Müşteri</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">Sağlayıcı</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Tarih</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Teminat</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Durum</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">\u0130\u015flemler</th>
+                <th className="text-right px-4 py-3 font-medium text-gray-600">İşlemler</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -240,7 +240,7 @@ export default function AdminInsurancePage() {
                 <tr key={item.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
                     <div className="font-medium">{item.policy_number || "-"}</div>
-                    <div className="text-xs text-gray-500">{item.policy_type === "travel" ? "Seyahat" : item.policy_type === "health" ? "Sa\u011fl\u0131k" : item.policy_type === "cancellation" ? "\u0130ptal" : item.policy_type === "baggage" ? "Bagaj" : "Kapsaml\u0131"}</div>
+                    <div className="text-xs text-gray-500">{item.policy_type === "travel" ? "Seyahat" : item.policy_type === "health" ? "Sağlık" : item.policy_type === "cancellation" ? "İptal" : item.policy_type === "baggage" ? "Bagaj" : "Kapsamlı"}</div>
                   </td>
                   <td className="px-4 py-3">{item.customer_name}</td>
                   <td className="px-4 py-3">{item.provider}</td>

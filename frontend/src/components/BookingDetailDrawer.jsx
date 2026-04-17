@@ -1340,7 +1340,7 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
             {booking?.code && <span>PNR: {booking.code}</span>}
           </div>
           <div className="flex gap-2">
-            {/* Faturay\u0131 Kes button */}
+            {/* Faturayı Kes button */}
             {bookingId && (
               <Button
                 variant={invoiceStatus?.invoice_id ? "outline" : "default"}
@@ -1355,16 +1355,16 @@ export function BookingDetailDrawer({ bookingId, mode = "agency", open, onOpenCh
                   setInvoiceLoading(true);
                   try {
                     const res = await api.post("/invoices/create-from-booking", { booking_id: bookingId });
-                    toast.success(`Fatura olu\u015fturuldu: ${res.data.invoice_id}`);
+                    toast.success(`Fatura oluşturuldu: ${res.data.invoice_id}`);
                     setInvoiceStatus(res.data);
                   } catch (e) {
-                    toast.error(apiErrorMessage(e) || "Fatura olu\u015fturulamad\u0131");
+                    toast.error(apiErrorMessage(e) || "Fatura oluşturulamadı");
                   } finally {
                     setInvoiceLoading(false);
                   }
                 }}
               >
-                {invoiceLoading ? "Olu\u015fturuluyor..." : invoiceStatus?.invoice_id ? `Fatura: ${invoiceStatus.invoice_id}` : "Faturay\u0131 Kes"}
+                {invoiceLoading ? "Oluşturuluyor..." : invoiceStatus?.invoice_id ? `Fatura: ${invoiceStatus.invoice_id}` : "Faturayı Kes"}
               </Button>
             )}
             <Button

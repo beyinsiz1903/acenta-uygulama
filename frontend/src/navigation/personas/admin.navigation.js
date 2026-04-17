@@ -45,7 +45,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
     items: [
       {
         key: "admin-overview",
-        label: "Genel Bak\u0131\u015f",
+        label: "Genel Bakış",
         icon: LayoutGrid,
         to: "/app",
         end: true,
@@ -57,7 +57,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
       },
       {
         key: "admin-exec-dashboard",
-        label: "Y\u00f6netici Dashboard",
+        label: "Yönetici Dashboard",
         icon: BarChart3,
         to: "/app/admin/dashboard",
         isCore: true,
@@ -76,7 +76,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
     items: [
       {
         key: "admin-orders",
-        label: "Sipari\u015fler",
+        label: "Siparişler",
         icon: FileText,
         to: "/app/admin/orders",
         isCore: true,
@@ -95,7 +95,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
       },
       {
         key: "admin-guest-cases",
-        label: "Misafir Vakalar\u0131",
+        label: "Misafir Vakaları",
         icon: Users,
         to: "/app/ops/guest-cases",
         isCore: true,
@@ -104,7 +104,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
       },
       {
         key: "admin-ops-tasks",
-        label: "G\u00f6revler",
+        label: "Görevler",
         icon: Activity,
         to: "/app/ops/tasks",
         isCore: true,
@@ -155,7 +155,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
       },
       {
         key: "admin-flights",
-        label: "U\u00e7u\u015flar",
+        label: "Uçuşlar",
         icon: Plane,
         to: "/app/admin/flights",
         isCore: true,
@@ -175,7 +175,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
       },
       {
         key: "admin-vehicles",
-        label: "Ara\u00e7lar",
+        label: "Araçlar",
         icon: Truck,
         to: "/app/admin/vehicles",
         isCore: true,
@@ -855,7 +855,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
       },
       {
         key: "admin-email-templates",
-        label: "E-posta \u015eablonlar\u0131",
+        label: "E-posta Şablonları",
         icon: Mail,
         to: "/app/admin/email-templates",
         isCore: true,
@@ -865,7 +865,7 @@ export const ADMIN_SIDEBAR_SECTIONS = [
       },
       {
         key: "admin-customer-portal",
-        label: "M\u00fc\u015fteri Portal\u0131",
+        label: "Müşteri Portalı",
         icon: Globe,
         to: "/app/admin/customer-portal",
         isCore: true,

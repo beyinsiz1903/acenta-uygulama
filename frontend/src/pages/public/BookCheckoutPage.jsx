@@ -220,8 +220,8 @@ export default function BookCheckoutPage() {
       <div className="min-h-screen bg-slate-50 px-4 py-6 flex justify-center">
         <Card className="w-full max-w-lg p-4 space-y-3">
           <EmptyState
-            title={"Teklif bilgisi bulunamad\u0131"}
-            description={"Ba\u011flant\u0131 eksik veya hatal\u0131. L\u00fctfen teklif ba\u011flant\u0131s\u0131n\u0131 yeniden a\u00e7\u0131n."}
+            title={"Teklif bilgisi bulunamadı"}
+            description={"Bağlantı eksik veya hatalı. Lütfen teklif bağlantısını yeniden açın."}
             action={
               <div className="flex justify-center">
                 <Button
@@ -231,7 +231,7 @@ export default function BookCheckoutPage() {
                     navigate(qs ? `/book?${qs}` : "/book");
                   }}
                 >
-                  {"Geri d\u00f6n"}
+                  {"Geri dön"}
                 </Button>
               </div>
             }

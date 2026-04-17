@@ -151,10 +151,10 @@ function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
       if (nextId) {
         setCustomerIdInput(nextId);
         await loadDetail(nextId);
-        toast.success("M\u00fc\u015fteri ba\u011fland\u0131.");
+        toast.success("Müşteri bağlandı.");
       } else {
         setDetail(null);
-        toast.success("M\u00fc\u015fteri ba\u011f\u0131 kald\u0131r\u0131ld\u0131.");
+        toast.success("Müşteri bağı kaldırıldı.");
       }
     } catch (e) {
       const msg = apiErrorMessage(e);
@@ -173,7 +173,7 @@ function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
       if (customerId) {
         await loadDetail(customerId);
       }
-      toast.success("G\u00f6rev tamamland\u0131.");
+      toast.success("Görev tamamlandı.");
     } catch (e) {
       const msg = e.message || apiErrorMessage(e.raw || e);
       toast.error(msg);
@@ -186,9 +186,9 @@ function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
     <div className="mt-4 border rounded-xl p-3 bg-muted/30">
       <div className="flex items-center justify-between gap-2 mb-2">
         <div>
-          <div className="text-xs font-semibold text-muted-foreground">CRM {"\u00d6zeti"}</div>
+          <div className="text-xs font-semibold text-muted-foreground">CRM {"Özeti"}</div>
           <div className="text-xs text-muted-foreground">
-            {"M\u00fc\u015fteri kart\u0131, a\u00e7\u0131k f\u0131rsatlar ve g\u00f6revleri tek bak\u0131\u015fta g\u00f6r\u00fcn."}
+            {"Müşteri kartı, açık fırsatlar ve görevleri tek bakışta görün."}
           </div>
         </div>
       </div>
@@ -196,7 +196,7 @@ function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
       {!hasCustomer ? (
         <div className="space-y-2 text-xs">
           <div className="text-muted-foreground">
-            {"Bu rezervasyona hen\u00fcz bir m\u00fc\u015fteri ba\u011fl\u0131 de\u011fil."}
+            {"Bu rezervasyona henüz bir müşteri bağlı değil."}
           </div>
           <form onSubmit={handleLink} className="flex flex-col sm:flex-row gap-2 items-start sm:items-center mt-1">
             <input
@@ -212,7 +212,7 @@ function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
               disabled={linking || !bookingId}
               className="text-xs"
             >
-              {linking ? "Ba\u011flan\u0131yor..." : "M\u00fc\u015fteri ba\u011fla"}
+              {linking ? "Bağlanıyor..." : "Müşteri bağla"}
             </Button>
           </form>
           {linkError && <div className="text-xs text-red-600">{linkError}</div>}
@@ -220,17 +220,17 @@ function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
       ) : (
         <div className="space-y-3 text-xs">
           {loading ? (
-            <div className="text-muted-foreground">{"CRM bilgileri y\u00fckleniyor..."}</div>
+            <div className="text-muted-foreground">{"CRM bilgileri yükleniyor..."}</div>
           ) : error ? (
             <div className="text-red-600 text-xs">{error}</div>
           ) : !detail ? (
-            <div className="text-muted-foreground">{"CRM kayd\u0131 bulunamad\u0131."}</div>
+            <div className="text-muted-foreground">{"CRM kaydı bulunamadı."}</div>
           ) : (
             <>
               {/* Customer card */}
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                 <div className="space-y-1">
-                  <div className="text-sm font-medium">{detail.customer?.name || "M\u00fc\u015fteri"}</div>
+                  <div className="text-sm font-medium">{detail.customer?.name || "Müşteri"}</div>
                   <div className="flex flex-wrap gap-1">
                     {(detail.customer?.tags || []).slice(0, 5).map((tag) => (
                       <span
@@ -244,7 +244,7 @@ function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
                   <div className="text-xs text-muted-foreground">
                     {(() => {
                       const contacts = detail.customer?.contacts || [];
-                      if (!contacts.length) return "Birincil ileti\u015fim bilgisi yok.";
+                      if (!contacts.length) return "Birincil iletişim bilgisi yok.";
                       const primary = contacts.find((c) => c.is_primary) || contacts[0];
                       const typeLabel = primary.type === "email" ? "E-posta" : "Telefon";
                       return `${typeLabel}: ${primary.value}`;
@@ -261,7 +261,7 @@ function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
                       window.open(`/app/crm/customers/${customerId}`, "_blank");
                     }}
                   >
-                    {"CRM'de a\u00e7"}
+                    {"CRM'de aç"}
                   </Button>
                 </div>
               </div>
@@ -269,10 +269,10 @@ function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
               {/* Open deals & tasks */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="border rounded-lg p-2 bg-background">
-                  <div className="text-xs font-semibold mb-1">{"A\u00e7\u0131k F\u0131rsatlar"}</div>
+                  <div className="text-xs font-semibold mb-1">{"Açık Fırsatlar"}</div>
                   {(detail.open_deals || []).length === 0 ? (
                     <div className="text-xs text-muted-foreground">
-                      {"Bu m\u00fc\u015fteri i\u00e7in a\u00e7\u0131k f\u0131rsat yok."}
+                      {"Bu müşteri için açık fırsat yok."}
                     </div>
                   ) : (
                     <ul className="space-y-1">
@@ -294,10 +294,10 @@ function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
                 </div>
 
                 <div className="border rounded-lg p-2 bg-background">
-                  <div className="text-xs font-semibold mb-1">{"A\u00e7\u0131k G\u00f6revler"}</div>
+                  <div className="text-xs font-semibold mb-1">{"Açık Görevler"}</div>
                   {(detail.open_tasks || []).length === 0 ? (
                     <div className="text-xs text-muted-foreground">
-                      {"Bu m\u00fc\u015fteri i\u00e7in a\u00e7\u0131k g\u00f6rev yok."}
+                      {"Bu müşteri için açık görev yok."}
                     </div>
                   ) : (
                     <ul className="space-y-1">
@@ -322,7 +322,7 @@ function CrmBookingSnapshot({ booking, bookingId, onCustomerLinked }) {
                             disabled={completingId === task.id}
                             onClick={() => handleCompleteTask(task.id)}
                           >
-                            {completingId === task.id ? "Tamamlan\u0131yor..." : "Tamamla"}
+                            {completingId === task.id ? "Tamamlanıyor..." : "Tamamla"}
                           </Button>
                         </li>
                       ))}

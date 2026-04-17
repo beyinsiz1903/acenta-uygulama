@@ -104,7 +104,7 @@ function InboxPage() {
         }
       }
     } catch (e) {
-      setThreadsError(e.message || "Inbox y\u00fcklenemedi.");
+      setThreadsError(e.message || "Inbox yüklenemedi.");
       if (reset) setThreads([]);
     } finally {
       setThreadsLoading(false);
@@ -132,7 +132,7 @@ function InboxPage() {
       setMessagesTotal(res.total || 0);
       setMessagesPage(res.page || effectivePage);
     } catch (e) {
-      setErrMessages(e.message || "Mesajlar y\u00fcklenemedi.");
+      setErrMessages(e.message || "Mesajlar yüklenemedi.");
       if (reset) setMessages([]);
     } finally {
       setLoadingMessages(false);
@@ -173,7 +173,7 @@ function InboxPage() {
       await loadMessages(selectedThreadId, { reset: true });
       await loadThreads({ reset: true });
     } catch (e) {
-      setErrMessages(e.message || "Mesaj g\u00f6nderilemedi.");
+      setErrMessages(e.message || "Mesaj gönderilemedi.");
     } finally {
       setSendLoading(false);
     }

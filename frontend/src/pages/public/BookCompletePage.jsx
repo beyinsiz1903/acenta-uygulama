@@ -102,8 +102,8 @@ export default function BookCompletePage() {
       <div className="min-h-screen bg-slate-50 px-4 py-6 flex justify-center">
         <Card className="w-full max-w-lg p-4 space-y-3">
           <EmptyState
-            title={"Rezervasyon bilgisi bulunamad\u0131"}
-            description={"Ba\u011flant\u0131 eksik veya hatal\u0131. L\u00fctfen rezervasyon sayfas\u0131n\u0131 yeniden a\u00e7\u0131n."}
+            title={"Rezervasyon bilgisi bulunamadı"}
+            description={"Bağlantı eksik veya hatalı. Lütfen rezervasyon sayfasını yeniden açın."}
             action={
               <div className="flex flex-col sm:flex-row gap-2 justify-center">
                 <Button
@@ -113,7 +113,7 @@ export default function BookCompletePage() {
                     navigate(qs ? `/book?${qs}` : "/book");
                   }}
                 >
-                  {"Geri d\u00f6n"}
+                  {"Geri dön"}
                 </Button>
               </div>
             }

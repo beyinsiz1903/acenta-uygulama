@@ -22,7 +22,7 @@ const EVENT_ICONS = {
 
 const EVENT_LABELS = {
   transfer: "Transfer",
-  flight: "U\u00e7u\u015f",
+  flight: "Uçuş",
   visa: "Vize",
   tour: "Tur",
   insurance: "Sigorta",
@@ -75,8 +75,8 @@ export default function AdminCalendarPage() {
   const prevMonth = () => { if (month === 0) { setMonth(11); setYear(year - 1); } else setMonth(month - 1); };
   const nextMonth = () => { if (month === 11) { setMonth(0); setYear(year + 1); } else setMonth(month + 1); };
 
-  const monthNames = ["Ocak", "\u015eubat", "Mart", "Nisan", "May\u0131s", "Haziran", "Temmuz", "A\u011fustos", "Eyl\u00fcl", "Ekim", "Kas\u0131m", "Aral\u0131k"];
-  const dayNames = ["Pzt", "Sal", "\u00c7ar", "Per", "Cum", "Cmt", "Paz"];
+  const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+  const dayNames = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
 
   const handleEventClick = (ev) => {
     setDetailModal(ev);
@@ -107,13 +107,13 @@ export default function AdminCalendarPage() {
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <CalendarDays className="w-7 h-7 text-orange-600" /> Operasyon Takvimi
           </h1>
-          <p className="text-gray-500 mt-1">Transfer, u\u00e7u\u015f, vize ve sigorta etkinliklerini tek takvimde g\u00f6r\u00fcn</p>
+          <p className="text-gray-500 mt-1">Transfer, uçuş, vize ve sigorta etkinliklerini tek takvimde görün</p>
         </div>
         <div className="flex items-center gap-3">
           <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="border rounded-lg px-3 py-2 text-sm">
-            <option value="">T\u00fcm Etkinlikler</option>
+            <option value="">Tüm Etkinlikler</option>
             <option value="transfer">Transferler</option>
-            <option value="flight">U\u00e7u\u015flar</option>
+            <option value="flight">Uçuşlar</option>
             <option value="visa">Vize</option>
             <option value="tour">Turlar</option>
             <option value="insurance">Sigorta</option>
@@ -127,7 +127,7 @@ export default function AdminCalendarPage() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 {(() => { const Icon = EVENT_ICONS[detailModal.type] || CalendarDays; return <Icon className="w-5 h-5" />; })()}
-                Etkinlik Detay\u0131
+                Etkinlik Detayı
               </h3>
               <button onClick={() => setDetailModal(null)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
             </div>
@@ -138,7 +138,7 @@ export default function AdminCalendarPage() {
                 </span>
               </div>
               <div>
-                <div className="text-sm text-gray-500">Ba\u015fl\u0131k</div>
+                <div className="text-sm text-gray-500">Başlık</div>
                 <div className="font-medium">{detailModal.title}</div>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -175,7 +175,7 @@ export default function AdminCalendarPage() {
                 onClick={() => { navigateToModule(detailModal.type); setDetailModal(null); }}
                 className="w-full mt-2 bg-orange-600 text-white py-2 rounded-lg hover:bg-orange-700 text-sm"
               >
-                {EVENT_LABELS[detailModal.type] || "Mod\u00fcl"} Sayfas\u0131na Git
+                {EVENT_LABELS[detailModal.type] || "Modül"} Sayfasına Git
               </button>
             </div>
           </div>
@@ -207,13 +207,13 @@ export default function AdminCalendarPage() {
             )}
 
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-2">H\u0131zl\u0131 Olu\u015ftur:</p>
+              <p className="text-sm font-medium text-gray-700 mb-2">Hızlı Oluştur:</p>
               <div className="grid grid-cols-2 gap-2">
                 <button onClick={() => navigateToModule("transfer")} className="flex items-center gap-2 p-2 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700 hover:bg-blue-100">
                   <Bus className="w-4 h-4" /> Transfer
                 </button>
                 <button onClick={() => navigateToModule("flight")} className="flex items-center gap-2 p-2 bg-sky-50 border border-sky-200 rounded-lg text-sm text-sky-700 hover:bg-sky-100">
-                  <Plane className="w-4 h-4" /> U\u00e7u\u015f
+                  <Plane className="w-4 h-4" /> Uçuş
                 </button>
                 <button onClick={() => navigateToModule("visa")} className="flex items-center gap-2 p-2 bg-purple-50 border border-purple-200 rounded-lg text-sm text-purple-700 hover:bg-purple-100">
                   <FileCheck className="w-4 h-4" /> Vize

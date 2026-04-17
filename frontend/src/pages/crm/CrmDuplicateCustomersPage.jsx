@@ -43,7 +43,7 @@ export default function CrmDuplicateCustomersPage() {
         return next;
       });
     } catch (e) {
-      setErrMsg(e.message || "Duplicate m\u00fc\u015fteriler y\u00fcklenemedi.");
+      setErrMsg(e.message || "Duplicate müşteriler yüklenemedi.");
     } finally {
       setLoading(false);
     }
@@ -70,10 +70,10 @@ export default function CrmDuplicateCustomersPage() {
       const d = (rw.deals && rw.deals.matched) || 0;
       const t = (rw.tasks && rw.tasks.matched) || 0;
       const a = (rw.activities && rw.activities.matched) || 0;
-      const msg = `Dry-run tamamland\u0131: ${b} rezervasyon, ${d} f\u0131rsat, ${t} g\u00f6rev, ${a} aktivite etkilenecek.`;
+      const msg = `Dry-run tamamlandı: ${b} rezervasyon, ${d} fırsat, ${t} görev, ${a} aktivite etkilenecek.`;
       toast.success(msg);
     } catch (e) {
-      toast.error(e.message || "Dry-run ba\u015far\u0131s\u0131z oldu.");
+      toast.error(e.message || "Dry-run başarısız oldu.");
     } finally {
       setLoadingKey("");
     }
@@ -95,7 +95,7 @@ export default function CrmDuplicateCustomersPage() {
       const d = (rw.deals && rw.deals.modified) || 0;
       const t = (rw.tasks && rw.tasks.modified) || 0;
       const a = (rw.activities && rw.activities.modified) || 0;
-      const msg = `Merge tamamland\u0131: ${b} rezervasyon, ${d} f\u0131rsat, ${t} g\u00f6rev, ${a} aktivite g\u00fcncellendi.`;
+      const msg = `Merge tamamlandı: ${b} rezervasyon, ${d} fırsat, ${t} görev, ${a} aktivite güncellendi.`;
       toast.success(msg);
 
       // Optimistic remove: hide this cluster immediately
@@ -112,10 +112,10 @@ export default function CrmDuplicateCustomersPage() {
       const msg =
         e.message ||
         (e.raw && e.raw.response && e.raw.response.data && e.raw.response.data.detail) ||
-        "Merge i\u015flemi ba\u015far\u0131s\u0131z oldu.";
+        "Merge işlemi başarısız oldu.";
       if (msg === "customer_merge_conflict") {
         toast.error(
-          "Bu kay\u0131t ba\u015fka bir primary'ye merge edilmi\u015f. \u00d6nce duplicate raporunu yenileyin."
+          "Bu kayıt başka bir primary'ye merge edilmiş. Önce duplicate raporunu yenileyin."
         );
       } else {
         toast.error(msg);

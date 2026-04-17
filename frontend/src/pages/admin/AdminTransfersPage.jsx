@@ -12,11 +12,11 @@ const TRANSFER_TYPES = [
 ];
 
 const STATUS_OPTIONS = [
-  { value: "planned", label: "Planland\u0131", color: "bg-blue-100 text-blue-800" },
-  { value: "confirmed", label: "Onayland\u0131", color: "bg-green-100 text-green-800" },
+  { value: "planned", label: "Planlandı", color: "bg-blue-100 text-blue-800" },
+  { value: "confirmed", label: "Onaylandı", color: "bg-green-100 text-green-800" },
   { value: "in_progress", label: "Devam Ediyor", color: "bg-yellow-100 text-yellow-800" },
-  { value: "completed", label: "Tamamland\u0131", color: "bg-gray-100 text-gray-800" },
-  { value: "cancelled", label: "\u0130ptal", color: "bg-red-100 text-red-800" },
+  { value: "completed", label: "Tamamlandı", color: "bg-gray-100 text-gray-800" },
+  { value: "cancelled", label: "İptal", color: "bg-red-100 text-red-800" },
 ];
 
 function StatusBadge({ status }) {
@@ -100,9 +100,9 @@ export default function AdminTransfersPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Bus className="w-7 h-7 text-blue-600" /> Transfer Y\u00f6netimi
+            <Bus className="w-7 h-7 text-blue-600" /> Transfer Yönetimi
           </h1>
-          <p className="text-gray-500 mt-1">Havalimanı, otel ve tur transferlerini y\u00f6netin</p>
+          <p className="text-gray-500 mt-1">Havalimanı, otel ve tur transferlerini yönetin</p>
         </div>
         <button onClick={() => { setEditItem(null); setShowForm(true); }} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
           <Plus className="w-4 h-4" /> Yeni Transfer
@@ -111,41 +111,41 @@ export default function AdminTransfersPage() {
 
       <div className="flex gap-3 mb-4">
         <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="border rounded-lg px-3 py-2 text-sm">
-          <option value="">T\u00fcm Durumlar</option>
+          <option value="">Tüm Durumlar</option>
           {STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>
         <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="border rounded-lg px-3 py-2 text-sm">
-          <option value="">T\u00fcm Tipler</option>
+          <option value="">Tüm Tipler</option>
           {TRANSFER_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
         </select>
       </div>
 
       {showForm && (
         <div className="bg-white border rounded-xl p-6 mb-6 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">{editItem ? "Transfer D\u00fczenle" : "Yeni Transfer"}</h3>
+          <h3 className="text-lg font-semibold mb-4">{editItem ? "Transfer Düzenle" : "Yeni Transfer"}</h3>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <select name="transfer_type" defaultValue={editItem?.transfer_type || "private"} className="border rounded-lg px-3 py-2">
               {TRANSFER_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
             <input name="date" type="date" defaultValue={editItem?.date || ""} className="border rounded-lg px-3 py-2" required />
             <input name="pickup_time" type="time" defaultValue={editItem?.pickup_time || ""} className="border rounded-lg px-3 py-2" />
-            <input name="pickup_location" defaultValue={editItem?.pickup_location || ""} placeholder="Al\u0131\u015f Noktas\u0131" className="border rounded-lg px-3 py-2" />
-            <input name="dropoff_location" defaultValue={editItem?.dropoff_location || ""} placeholder="B\u0131rak\u0131\u015f Noktas\u0131" className="border rounded-lg px-3 py-2" />
-            <input name="route_name" defaultValue={editItem?.route_name || ""} placeholder="G\u00fczergah Ad\u0131" className="border rounded-lg px-3 py-2" />
+            <input name="pickup_location" defaultValue={editItem?.pickup_location || ""} placeholder="Alış Noktası" className="border rounded-lg px-3 py-2" />
+            <input name="dropoff_location" defaultValue={editItem?.dropoff_location || ""} placeholder="Bırakış Noktası" className="border rounded-lg px-3 py-2" />
+            <input name="route_name" defaultValue={editItem?.route_name || ""} placeholder="Güzergah Adı" className="border rounded-lg px-3 py-2" />
             <select name="vehicle_id" defaultValue={editItem?.vehicle_id || ""} className="border rounded-lg px-3 py-2">
-              <option value="">Ara\u00e7 Se\u00e7in (opsiyonel)</option>
+              <option value="">Araç Seçin (opsiyonel)</option>
               {vehicles.filter((v) => v.status === "active").map((v) => (
-                <option key={v.id} value={v.id}>{v.plate_number} - {v.brand} {v.model} ({v.capacity} ki\u015fi)</option>
+                <option key={v.id} value={v.id}>{v.plate_number} - {v.brand} {v.model} ({v.capacity} kişi)</option>
               ))}
             </select>
             <select name="guide_id" defaultValue={editItem?.guide_id || ""} className="border rounded-lg px-3 py-2">
-              <option value="">Rehber Se\u00e7in (opsiyonel)</option>
+              <option value="">Rehber Seçin (opsiyonel)</option>
               {guides.filter((g) => g.status === "active").map((g) => (
                 <option key={g.id} value={g.id}>{g.name} - {g.languages?.join(", ")}</option>
               ))}
             </select>
-            <input name="driver_name" defaultValue={editItem?.driver_name || ""} placeholder="\u015eof\u00f6r Ad\u0131" className="border rounded-lg px-3 py-2" />
-            <input name="pax_count" type="number" defaultValue={editItem?.pax_count || 1} placeholder="Yolcu Say\u0131s\u0131" className="border rounded-lg px-3 py-2" />
+            <input name="driver_name" defaultValue={editItem?.driver_name || ""} placeholder="Şoför Adı" className="border rounded-lg px-3 py-2" />
+            <input name="pax_count" type="number" defaultValue={editItem?.pax_count || 1} placeholder="Yolcu Sayısı" className="border rounded-lg px-3 py-2" />
             <input name="price" type="number" step="0.01" defaultValue={editItem?.price || 0} placeholder="Fiyat" className="border rounded-lg px-3 py-2" />
             <select name="status" defaultValue={editItem?.status || "planned"} className="border rounded-lg px-3 py-2">
               {STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
@@ -154,7 +154,7 @@ export default function AdminTransfersPage() {
             <input name="notes" defaultValue={editItem?.notes || ""} placeholder="Notlar" className="border rounded-lg px-3 py-2 md:col-span-2" />
             <div className="flex gap-2 md:col-span-3">
               <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">Kaydet</button>
-              <button type="button" onClick={() => { setShowForm(false); setEditItem(null); }} className="bg-gray-200 px-6 py-2 rounded-lg">Vazge\u00e7</button>
+              <button type="button" onClick={() => { setShowForm(false); setEditItem(null); }} className="bg-gray-200 px-6 py-2 rounded-lg">Vazgeç</button>
             </div>
           </form>
         </div>
@@ -165,7 +165,7 @@ export default function AdminTransfersPage() {
           <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">
-                {assignModal.type === "vehicle" ? "Ara\u00e7 Ata" : "Rehber Ata"}
+                {assignModal.type === "vehicle" ? "Araç Ata" : "Rehber Ata"}
               </h3>
               <button onClick={() => setAssignModal(null)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
             </div>
@@ -178,11 +178,11 @@ export default function AdminTransfersPage() {
                     className={`w-full text-left p-3 rounded-lg border hover:bg-blue-50 hover:border-blue-300 transition ${assignModal.currentId === v.id ? "bg-blue-50 border-blue-400" : ""}`}
                   >
                     <div className="font-medium">{v.plate_number}</div>
-                    <div className="text-sm text-gray-500">{v.brand} {v.model} \u00b7 {v.capacity} ki\u015fi \u00b7 \u015eof\u00f6r: {v.driver_name || "-"}</div>
+                    <div className="text-sm text-gray-500">{v.brand} {v.model} · {v.capacity} kişi · Şoför: {v.driver_name || "-"}</div>
                   </button>
                 ))}
                 {vehicles.filter((v) => v.status === "active").length === 0 && (
-                  <p className="text-gray-500 text-center py-4">Aktif ara\u00e7 bulunamad\u0131</p>
+                  <p className="text-gray-500 text-center py-4">Aktif araç bulunamadı</p>
                 )}
               </div>
             ) : (
@@ -194,11 +194,11 @@ export default function AdminTransfersPage() {
                     className={`w-full text-left p-3 rounded-lg border hover:bg-indigo-50 hover:border-indigo-300 transition ${assignModal.currentId === g.id ? "bg-indigo-50 border-indigo-400" : ""}`}
                   >
                     <div className="font-medium">{g.name}</div>
-                    <div className="text-sm text-gray-500">{g.languages?.join(", ")} \u00b7 {g.daily_rate} {g.currency}/g\u00fcn</div>
+                    <div className="text-sm text-gray-500">{g.languages?.join(", ")} · {g.daily_rate} {g.currency}/gün</div>
                   </button>
                 ))}
                 {guides.filter((g) => g.status === "active").length === 0 && (
-                  <p className="text-gray-500 text-center py-4">Aktif rehber bulunamad\u0131</p>
+                  <p className="text-gray-500 text-center py-4">Aktif rehber bulunamadı</p>
                 )}
               </div>
             )}
@@ -207,11 +207,11 @@ export default function AdminTransfersPage() {
       )}
 
       {isLoading ? (
-        <div className="text-center py-12 text-gray-400">Y\u00fckleniyor...</div>
+        <div className="text-center py-12 text-gray-400">Yükleniyor...</div>
       ) : items.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-xl border">
           <Bus className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500">Hen\u00fcz transfer kayd\u0131 yok</p>
+          <p className="text-gray-500">Henüz transfer kaydı yok</p>
         </div>
       ) : (
         <div className="bg-white rounded-xl border overflow-hidden">
@@ -220,12 +220,12 @@ export default function AdminTransfersPage() {
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Tarih/Saat</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Tip</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">G\u00fczergah</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Ara\u00e7</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">Güzergah</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">Araç</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Rehber</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Pax</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Durum</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">\u0130\u015flemler</th>
+                <th className="text-right px-4 py-3 font-medium text-gray-600">İşlemler</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -239,7 +239,7 @@ export default function AdminTransfersPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
                       <MapPin className="w-3 h-3 text-gray-400" />
-                      {item.pickup_location} \u2192 {item.dropoff_location}
+                      {item.pickup_location} → {item.dropoff_location}
                     </div>
                   </td>
                   <td className="px-4 py-3">

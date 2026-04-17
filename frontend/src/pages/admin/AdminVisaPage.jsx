@@ -6,13 +6,13 @@ import { FileCheck, Plus, Edit, Trash2, Search } from "lucide-react";
 const VISA_STATUSES = {
   draft: { label: "Taslak", color: "bg-gray-100 text-gray-700" },
   documents_collecting: { label: "Belge Toplama", color: "bg-blue-100 text-blue-800" },
-  documents_ready: { label: "Belgeler Haz\u0131r", color: "bg-indigo-100 text-indigo-800" },
-  submitted: { label: "Ba\u015fvuru Yap\u0131ld\u0131", color: "bg-purple-100 text-purple-800" },
-  appointment_scheduled: { label: "Randevu Al\u0131nd\u0131", color: "bg-yellow-100 text-yellow-800" },
+  documents_ready: { label: "Belgeler Hazır", color: "bg-indigo-100 text-indigo-800" },
+  submitted: { label: "Başvuru Yapıldı", color: "bg-purple-100 text-purple-800" },
+  appointment_scheduled: { label: "Randevu Alındı", color: "bg-yellow-100 text-yellow-800" },
   at_consulate: { label: "Konsoloslukta", color: "bg-orange-100 text-orange-800" },
-  approved: { label: "Onayland\u0131", color: "bg-green-100 text-green-800" },
+  approved: { label: "Onaylandı", color: "bg-green-100 text-green-800" },
   rejected: { label: "Reddedildi", color: "bg-red-100 text-red-800" },
-  cancelled: { label: "\u0130ptal", color: "bg-red-50 text-red-600" },
+  cancelled: { label: "İptal", color: "bg-red-50 text-red-600" },
 };
 
 function CustomerSearch({ value, onChange, customers }) {
@@ -39,7 +39,7 @@ function CustomerSearch({ value, onChange, customers }) {
         className="border rounded-lg px-3 py-2 cursor-pointer flex items-center justify-between"
       >
         <span className={selected ? "text-gray-900" : "text-gray-400"}>
-          {selected ? `${selected.name} (${selected.email || ""})` : "M\u00fc\u015fteri Se\u00e7in"}
+          {selected ? `${selected.name} (${selected.email || ""})` : "Müşteri Seçin"}
         </span>
         <Search className="w-4 h-4 text-gray-400" />
       </div>
@@ -56,7 +56,7 @@ function CustomerSearch({ value, onChange, customers }) {
             />
           </div>
           {filtered.length === 0 && (
-            <div className="p-3 text-sm text-gray-500">Sonu\u00e7 bulunamad\u0131</div>
+            <div className="p-3 text-sm text-gray-500">Sonuç bulunamadı</div>
           )}
           {filtered.map((c) => (
             <button
@@ -65,7 +65,7 @@ function CustomerSearch({ value, onChange, customers }) {
               className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 ${c.id === value ? "bg-blue-50" : ""}`}
             >
               <div className="font-medium">{c.name}</div>
-              <div className="text-xs text-gray-500">{c.email} {c.phone ? `\u00b7 ${c.phone}` : ""}</div>
+              <div className="text-xs text-gray-500">{c.email} {c.phone ? `· ${c.phone}` : ""}</div>
             </button>
           ))}
         </div>
@@ -123,7 +123,7 @@ export default function AdminVisaPage() {
       body.customer_name = selectedCustomer.name;
     }
     if (!editItem && !body.customer_id) {
-      alert("L\u00fctfen bir m\u00fc\u015fteri se\u00e7in");
+      alert("Lütfen bir müşteri seçin");
       return;
     }
     if (editItem) patchMut.mutate({ id: editItem.id, body });
@@ -147,26 +147,26 @@ export default function AdminVisaPage() {
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <FileCheck className="w-7 h-7 text-purple-600" /> Vize Takip
           </h1>
-          <p className="text-gray-500 mt-1">Vize ba\u015fvurular\u0131n\u0131 ve belge s\u00fcre\u00e7lerini y\u00f6netin</p>
+          <p className="text-gray-500 mt-1">Vize başvurularını ve belge süreçlerini yönetin</p>
         </div>
         <button onClick={() => { setEditItem(null); setSelectedCustomer(null); setShowForm(true); }} className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
-          <Plus className="w-4 h-4" /> Yeni Ba\u015fvuru
+          <Plus className="w-4 h-4" /> Yeni Başvuru
         </button>
       </div>
 
       <div className="flex gap-3 mb-4">
         <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="border rounded-lg px-3 py-2 text-sm">
-          <option value="">T\u00fcm Durumlar</option>
+          <option value="">Tüm Durumlar</option>
           {Object.entries(VISA_STATUSES).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
         </select>
       </div>
 
       {showForm && (
         <div className="bg-white border rounded-xl p-6 mb-6 shadow-sm">
-          <h3 className="text-lg font-semibold mb-4">{editItem ? "Ba\u015fvuru D\u00fczenle" : "Yeni Vize Ba\u015fvurusu"}</h3>
+          <h3 className="text-lg font-semibold mb-4">{editItem ? "Başvuru Düzenle" : "Yeni Vize Başvurusu"}</h3>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">M\u00fc\u015fteri</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Müşteri</label>
               <CustomerSearch
                 value={selectedCustomer?.id || editItem?.customer_id || ""}
                 onChange={(c) => setSelectedCustomer(c)}
@@ -174,51 +174,51 @@ export default function AdminVisaPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">M\u00fc\u015fteri Ad\u0131</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Müşteri Adı</label>
               <input name="customer_name" value={selectedCustomer?.name || editItem?.customer_name || ""} readOnly className="border rounded-lg px-3 py-2 w-full bg-gray-50" />
             </div>
-            <input name="destination_country" defaultValue={editItem?.destination_country || ""} placeholder="Hedef \u00dclke" className="border rounded-lg px-3 py-2" required />
+            <input name="destination_country" defaultValue={editItem?.destination_country || ""} placeholder="Hedef Ülke" className="border rounded-lg px-3 py-2" required />
             <select name="visa_type" defaultValue={editItem?.visa_type || "tourist"} className="border rounded-lg px-3 py-2">
               <option value="tourist">Turist</option>
-              <option value="business">\u0130\u015f</option>
+              <option value="business">İş</option>
               <option value="transit">Transit</option>
-              <option value="student">\u00d6\u011frenci</option>
+              <option value="student">Öğrenci</option>
             </select>
             <input name="passport_number" defaultValue={editItem?.passport_number || ""} placeholder="Pasaport No" className="border rounded-lg px-3 py-2" />
             <input name="passport_expiry" type="date" defaultValue={editItem?.passport_expiry || ""} className="border rounded-lg px-3 py-2" />
             <input name="consulate" defaultValue={editItem?.consulate || ""} placeholder="Konsolosluk" className="border rounded-lg px-3 py-2" />
             <input name="appointment_date" type="date" defaultValue={editItem?.appointment_date || ""} className="border rounded-lg px-3 py-2" />
-            <input name="fee" type="number" step="0.01" defaultValue={editItem?.fee || 0} placeholder="\u00dccret" className="border rounded-lg px-3 py-2" />
+            <input name="fee" type="number" step="0.01" defaultValue={editItem?.fee || 0} placeholder="Ücret" className="border rounded-lg px-3 py-2" />
             <select name="status" defaultValue={editItem?.status || "draft"} className="border rounded-lg px-3 py-2">
               {Object.entries(VISA_STATUSES).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
             </select>
             <input name="notes" defaultValue={editItem?.notes || ""} placeholder="Notlar" className="border rounded-lg px-3 py-2 md:col-span-2" />
             <div className="flex gap-2 md:col-span-3">
               <button type="submit" className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700">Kaydet</button>
-              <button type="button" onClick={() => { setShowForm(false); setEditItem(null); setSelectedCustomer(null); }} className="bg-gray-200 px-6 py-2 rounded-lg">Vazge\u00e7</button>
+              <button type="button" onClick={() => { setShowForm(false); setEditItem(null); setSelectedCustomer(null); }} className="bg-gray-200 px-6 py-2 rounded-lg">Vazgeç</button>
             </div>
           </form>
         </div>
       )}
 
       {isLoading ? (
-        <div className="text-center py-12 text-gray-400">Y\u00fckleniyor...</div>
+        <div className="text-center py-12 text-gray-400">Yükleniyor...</div>
       ) : items.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-xl border">
           <FileCheck className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500">Hen\u00fcz vize ba\u015fvurusu yok</p>
+          <p className="text-gray-500">Henüz vize başvurusu yok</p>
         </div>
       ) : (
         <div className="bg-white rounded-xl border overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">M\u00fc\u015fteri</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">\u00dclke</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">Müşteri</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-600">Ülke</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Tip</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Randevu</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Durum</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">\u0130\u015flemler</th>
+                <th className="text-right px-4 py-3 font-medium text-gray-600">İşlemler</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -231,7 +231,7 @@ export default function AdminVisaPage() {
                       <div className="text-xs text-gray-500">Pasaport: {item.passport_number}</div>
                     </td>
                     <td className="px-4 py-3 font-medium">{item.destination_country}</td>
-                    <td className="px-4 py-3">{item.visa_type === "tourist" ? "Turist" : item.visa_type === "business" ? "\u0130\u015f" : item.visa_type === "transit" ? "Transit" : "\u00d6\u011frenci"}</td>
+                    <td className="px-4 py-3">{item.visa_type === "tourist" ? "Turist" : item.visa_type === "business" ? "İş" : item.visa_type === "transit" ? "Transit" : "Öğrenci"}</td>
                     <td className="px-4 py-3">{item.appointment_date || "-"}</td>
                     <td className="px-4 py-3"><span className={`px-2 py-1 rounded-full text-xs font-medium ${st.color}`}>{st.label}</span></td>
                     <td className="px-4 py-3 text-right">

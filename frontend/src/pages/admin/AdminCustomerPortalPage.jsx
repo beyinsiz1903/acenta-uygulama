@@ -61,9 +61,9 @@ export default function AdminCustomerPortalPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Globe className="w-7 h-7 text-cyan-600" /> M\u00fc\u015fteri Portal\u0131
+            <Globe className="w-7 h-7 text-cyan-600" /> Müşteri Portalı
           </h1>
-          <p className="text-gray-500 mt-1">M\u00fc\u015fterilerinizin self-servis portal\u0131n\u0131 y\u00f6netin</p>
+          <p className="text-gray-500 mt-1">Müşterilerinizin self-servis portalını yönetin</p>
         </div>
       </div>
 
@@ -94,7 +94,7 @@ export default function AdminCustomerPortalPage() {
               <MessageSquare className="w-5 h-5 text-yellow-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">A\u00e7\u0131k Talepler</h3>
+              <h3 className="font-semibold text-gray-900">Açık Talepler</h3>
             </div>
           </div>
           <div className="text-3xl font-bold text-gray-900">
@@ -109,7 +109,7 @@ export default function AdminCustomerPortalPage() {
               <AlertTriangle className="w-5 h-5 text-orange-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">\u0130ptal Talepleri</h3>
+              <h3 className="font-semibold text-gray-900">İptal Talepleri</h3>
             </div>
           </div>
           <div className="text-3xl font-bold text-gray-900">
@@ -124,14 +124,14 @@ export default function AdminCustomerPortalPage() {
               <Shield className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">\u00d6zellikler</h3>
+              <h3 className="font-semibold text-gray-900">Özellikler</h3>
             </div>
           </div>
           <ul className="space-y-1 text-xs text-gray-700">
-            <li className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-green-500 rounded-full" /> Rezervasyon g\u00f6r\u00fcnt\u00fcleme</li>
+            <li className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-green-500 rounded-full" /> Rezervasyon görüntüleme</li>
             <li className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-green-500 rounded-full" /> Fatura/voucher indirme</li>
             <li className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-green-500 rounded-full" /> Destek talebi</li>
-            <li className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-green-500 rounded-full" /> \u0130ptal talebi</li>
+            <li className="flex items-center gap-1"><span className="w-1.5 h-1.5 bg-green-500 rounded-full" /> İptal talebi</li>
           </ul>
         </div>
       </div>
@@ -149,7 +149,7 @@ export default function AdminCustomerPortalPage() {
           className={`px-4 py-2 rounded-lg text-sm font-medium ${activeTab === "cancels" ? "bg-cyan-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
         >
           <XCircle className="w-4 h-4 inline mr-1" />
-          \u0130ptal Talepleri ({cancelRequests.length})
+          İptal Talepleri ({cancelRequests.length})
         </button>
       </div>
 
@@ -159,23 +159,23 @@ export default function AdminCustomerPortalPage() {
             <h3 className="text-lg font-semibold text-gray-900">Portaldan Gelen Destek Talepleri</h3>
           </div>
           {ticketsLoading ? (
-            <div className="text-center py-12 text-gray-400">Y\u00fckleniyor...</div>
+            <div className="text-center py-12 text-gray-400">Yükleniyor...</div>
           ) : tickets.length === 0 ? (
             <div className="text-center py-12">
               <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">Hen\u00fcz destek talebi yok</p>
+              <p className="text-gray-500">Henüz destek talebi yok</p>
             </div>
           ) : (
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">M\u00fc\u015fteri</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Müşteri</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Konu</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Mesaj</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Kategori</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Durum</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Tarih</th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">\u0130\u015flemler</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">İşlemler</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -190,7 +190,7 @@ export default function AdminCustomerPortalPage() {
                     <td className="px-4 py-3">{t.category}</td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${TICKET_STATUS_COLORS[t.status] || "bg-gray-100"}`}>
-                        {t.status === "open" ? "A\u00e7\u0131k" : t.status === "in_progress" ? "Devam Ediyor" : t.status === "resolved" ? "\u00c7\u00f6z\u00fcld\u00fc" : "Kapatıldı"}
+                        {t.status === "open" ? "Açık" : t.status === "in_progress" ? "Devam Ediyor" : t.status === "resolved" ? "Çözüldü" : "Kapatıldı"}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-500 text-xs">{t.created_at?.substring(0, 10)}</td>
@@ -207,7 +207,7 @@ export default function AdminCustomerPortalPage() {
                         {(t.status === "open" || t.status === "in_progress") && (
                           <button
                             onClick={() => updateTicketMut.mutate({ id: t.id, status: "resolved" })}
-                            className="text-green-600 hover:text-green-800 p-1" title="\u00c7\u00f6z\u00fcld\u00fc"
+                            className="text-green-600 hover:text-green-800 p-1" title="Çözüldü"
                           >
                             <CheckCircle className="w-4 h-4" />
                           </button>
@@ -233,25 +233,25 @@ export default function AdminCustomerPortalPage() {
       {activeTab === "cancels" && (
         <div className="bg-white rounded-xl border">
           <div className="px-6 py-4 border-b">
-            <h3 className="text-lg font-semibold text-gray-900">Portaldan Gelen \u0130ptal Talepleri</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Portaldan Gelen İptal Talepleri</h3>
           </div>
           {cancelLoading ? (
-            <div className="text-center py-12 text-gray-400">Y\u00fckleniyor...</div>
+            <div className="text-center py-12 text-gray-400">Yükleniyor...</div>
           ) : cancelRequests.length === 0 ? (
             <div className="text-center py-12">
               <XCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">Hen\u00fcz iptal talebi yok</p>
+              <p className="text-gray-500">Henüz iptal talebi yok</p>
             </div>
           ) : (
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">M\u00fc\u015fteri</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Müşteri</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Rezervasyon</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Sebep</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Durum</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Tarih</th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">\u0130\u015flemler</th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">İşlemler</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -262,7 +262,7 @@ export default function AdminCustomerPortalPage() {
                     <td className="px-4 py-3 text-gray-600 max-w-[250px] truncate">{c.reason}</td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${CANCEL_STATUS_COLORS[c.status] || "bg-gray-100"}`}>
-                        {c.status === "pending" ? "Bekliyor" : c.status === "approved" ? "Onayland\u0131" : "Reddedildi"}
+                        {c.status === "pending" ? "Bekliyor" : c.status === "approved" ? "Onaylandı" : "Reddedildi"}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-500 text-xs">{c.created_at?.substring(0, 10)}</td>
@@ -284,7 +284,7 @@ export default function AdminCustomerPortalPage() {
                         </div>
                       )}
                       {c.status !== "pending" && (
-                        <span className="text-xs text-gray-400">\u0130\u015flem yap\u0131ld\u0131</span>
+                        <span className="text-xs text-gray-400">İşlem yapıldı</span>
                       )}
                     </td>
                   </tr>

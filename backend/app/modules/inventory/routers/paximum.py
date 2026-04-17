@@ -1,11 +1,11 @@
-"""Paximum (San TSG) marketplace proxy router.
+"""Paximum (San TSG) marketplace proxy router — per-tenant.
 
-Thin per-request proxy over `PaximumClient`. Auth: admin or operator.
-All endpoints under `/api/paximum/*`. Errors are translated to HTTP via
-`PaximumError`'s status_code and message.
+Each request loads the calling agency's Paximum credentials (base_url +
+bearer_token) from the encrypted `supplier_credentials` collection
+(`/api/supplier-credentials/*` UI). No env vars are read.
 
-Phase 1 surface (no local persistence yet — v2 will mirror bookings into
-`agency_reservations` similar to syroce_marketplace).
+Auth: super_admin / admin / agency_admin / operator.
+All endpoints under `/api/paximum/*`.
 """
 from __future__ import annotations
 
@@ -16,18 +16,37 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from app.auth import require_roles
+from app.db import get_db
+from app.domain.suppliers.supplier_credentials_service import get_decrypted_credentials
 from app.services.paximum import PaximumClient, PaximumError
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/paximum", tags=["paximum"])
 
-UserDep = Depends(require_roles(["super_admin", "admin", "operator"]))
+ROLES = ["super_admin", "admin", "agency_admin", "operator"]
+UserDep = Depends(require_roles(ROLES))
 
 
-def _client() -> PaximumClient:
+def _org_id(user: dict) -> str:
+    return user.get("organization_id") or user.get("org_id") or ""
+
+
+async def _client_for(current_user: dict, db) -> PaximumClient:
+    org_id = _org_id(current_user)
+    if not org_id:
+        raise HTTPException(status_code=400, detail="Aktif kullanıcı bir organizasyona bağlı değil.")
+    creds = await get_decrypted_credentials(db, org_id, "paximum")
+    if not creds or not creds.get("base_url") or not creds.get("bearer_token"):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Bu acente için Paximum credential'ları tanımlı değil. "
+                "Tedarikçi Ayarları > Paximum sayfasından base_url ve bearer_token girin."
+            ),
+        )
     try:
-        return PaximumClient()
+        return PaximumClient(base_url=creds["base_url"], token=creds["bearer_token"])
     except PaximumError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message)
 
@@ -126,21 +145,25 @@ class CancelBookingRequest(BaseModel):
 # ───────────────── Endpoints ─────────────────
 
 @router.get("/health")
-async def paximum_health(_user: dict = UserDep) -> Dict[str, Any]:
-    """Lightweight credential check — confirms env vars are set."""
-    import os
-    has_url = bool(os.environ.get("PAXIMUM_BASE_URL"))
-    has_token = bool(os.environ.get("PAXIMUM_BEARER_TOKEN"))
+async def paximum_health(current_user: dict = UserDep, db=Depends(get_db)) -> Dict[str, Any]:
+    """Per-tenant credential status (does not call upstream)."""
+    org_id = _org_id(current_user)
+    if not org_id:
+        return {"configured": False, "reason": "no_organization"}
+    creds = await get_decrypted_credentials(db, org_id, "paximum")
+    if not creds:
+        return {"configured": False, "reason": "no_credentials", "organization_id": org_id}
     return {
-        "configured": has_url and has_token,
-        "base_url_set": has_url,
-        "token_set": has_token,
+        "configured": bool(creds.get("base_url") and creds.get("bearer_token")),
+        "organization_id": org_id,
+        "base_url_set": bool(creds.get("base_url")),
+        "token_set": bool(creds.get("bearer_token")),
     }
 
 
 @router.post("/search/hotels")
-async def search_hotels(payload: SearchHotelsRequest, _user: dict = UserDep) -> Dict[str, Any]:
-    cli = _client()
+async def search_hotels(payload: SearchHotelsRequest, current_user: dict = UserDep, db=Depends(get_db)) -> Dict[str, Any]:
+    cli = await _client_for(current_user, db)
     try:
         return await cli.search_hotels(
             destinations=[d.model_dump() for d in payload.destinations],
@@ -162,8 +185,8 @@ async def search_hotels(payload: SearchHotelsRequest, _user: dict = UserDep) -> 
 
 
 @router.post("/search/hoteldetails")
-async def search_hotel_details(payload: HotelDetailsRequest, _user: dict = UserDep) -> Dict[str, Any]:
-    cli = _client()
+async def search_hotel_details(payload: HotelDetailsRequest, current_user: dict = UserDep, db=Depends(get_db)) -> Dict[str, Any]:
+    cli = await _client_for(current_user, db)
     try:
         return await cli.hotel_details(payload.hotelId)
     except PaximumError as exc:
@@ -171,8 +194,8 @@ async def search_hotel_details(payload: HotelDetailsRequest, _user: dict = UserD
 
 
 @router.post("/search/checkavailability")
-async def search_check_availability(payload: OfferIdRequest, _user: dict = UserDep) -> Dict[str, Any]:
-    cli = _client()
+async def search_check_availability(payload: OfferIdRequest, current_user: dict = UserDep, db=Depends(get_db)) -> Dict[str, Any]:
+    cli = await _client_for(current_user, db)
     try:
         return await cli.check_availability(payload.offerId)
     except PaximumError as exc:
@@ -180,8 +203,8 @@ async def search_check_availability(payload: OfferIdRequest, _user: dict = UserD
 
 
 @router.post("/search/checkhotelavailability")
-async def search_check_hotel_availability(payload: OfferIdRequest, _user: dict = UserDep) -> Dict[str, Any]:
-    cli = _client()
+async def search_check_hotel_availability(payload: OfferIdRequest, current_user: dict = UserDep, db=Depends(get_db)) -> Dict[str, Any]:
+    cli = await _client_for(current_user, db)
     try:
         return await cli.check_hotel_availability(payload.offerId)
     except PaximumError as exc:
@@ -189,8 +212,8 @@ async def search_check_hotel_availability(payload: OfferIdRequest, _user: dict =
 
 
 @router.post("/booking/placeorder")
-async def booking_place_order(payload: PlaceOrderRequest, _user: dict = UserDep) -> Dict[str, Any]:
-    cli = _client()
+async def booking_place_order(payload: PlaceOrderRequest, current_user: dict = UserDep, db=Depends(get_db)) -> Dict[str, Any]:
+    cli = await _client_for(current_user, db)
     try:
         return await cli.place_order(
             travellers=[t.model_dump(exclude_none=True) for t in payload.travellers],
@@ -202,8 +225,8 @@ async def booking_place_order(payload: PlaceOrderRequest, _user: dict = UserDep)
 
 
 @router.post("/booking/getbookings")
-async def booking_list(payload: GetBookingsRequest, _user: dict = UserDep) -> Dict[str, Any]:
-    cli = _client()
+async def booking_list(payload: GetBookingsRequest, current_user: dict = UserDep, db=Depends(get_db)) -> Dict[str, Any]:
+    cli = await _client_for(current_user, db)
     try:
         return await cli.get_bookings(
             from_date=payload.fromDate,
@@ -218,8 +241,8 @@ async def booking_list(payload: GetBookingsRequest, _user: dict = UserDep) -> Di
 
 
 @router.post("/booking/details")
-async def booking_details(payload: BookingDetailsRequest, _user: dict = UserDep) -> Dict[str, Any]:
-    cli = _client()
+async def booking_details(payload: BookingDetailsRequest, current_user: dict = UserDep, db=Depends(get_db)) -> Dict[str, Any]:
+    cli = await _client_for(current_user, db)
     try:
         return await cli.booking_details(
             booking_id=payload.bookingId,
@@ -231,8 +254,8 @@ async def booking_details(payload: BookingDetailsRequest, _user: dict = UserDep)
 
 
 @router.post("/booking/cancellationfee")
-async def booking_cancellation_fee(payload: BookingDetailsRequest, _user: dict = UserDep) -> Dict[str, Any]:
-    cli = _client()
+async def booking_cancellation_fee(payload: BookingDetailsRequest, current_user: dict = UserDep, db=Depends(get_db)) -> Dict[str, Any]:
+    cli = await _client_for(current_user, db)
     if not payload.bookingId:
         raise HTTPException(status_code=400, detail="bookingId zorunlu.")
     try:
@@ -242,8 +265,8 @@ async def booking_cancellation_fee(payload: BookingDetailsRequest, _user: dict =
 
 
 @router.post("/booking/cancel")
-async def booking_cancel(payload: CancelBookingRequest, _user: dict = UserDep) -> Dict[str, Any]:
-    cli = _client()
+async def booking_cancel(payload: CancelBookingRequest, current_user: dict = UserDep, db=Depends(get_db)) -> Dict[str, Any]:
+    cli = await _client_for(current_user, db)
     try:
         return await cli.cancel_booking(
             booking_id=payload.bookingId,

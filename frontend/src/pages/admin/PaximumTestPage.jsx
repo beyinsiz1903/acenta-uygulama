@@ -295,7 +295,8 @@ export default function PaximumTestPage() {
       >
         {!health.isLoading && !configured && (
           <div style={{ color: "#991b1b", fontSize: 13 }}>
-            <code>PAXIMUM_BASE_URL</code> ve <code>PAXIMUM_BEARER_TOKEN</code> Replit Secrets üzerinden eklenmelidir.
+            Bu acentenin Paximum credential'ları (base_url + bearer_token) tanımlı değil.
+            <b> Tedarikçi Ayarları &gt; Paximum</b> sayfasından girin (her acente kendi credential'ını kullanır).
           </div>
         )}
         {health.data && (

@@ -1,10 +1,9 @@
-"""Async HTTP client for Paximum (San TSG) marketplace.
+"""Async HTTP client for Paximum (San TSG) marketplace — per-tenant.
 
-All endpoints are POST with JSON body and Bearer token auth.
-Base URL and token come from environment variables:
-
-  PAXIMUM_BASE_URL     - e.g. http://api.stage.paximum.com  (no trailing slash)
-  PAXIMUM_BEARER_TOKEN - the long-lived bearer token issued by Paximum
+All endpoints are POST with JSON body and Bearer token auth. Credentials are
+NOT read from environment variables — they are loaded by the router from the
+encrypted `supplier_credentials` collection (per-agency). The constructor
+requires explicit `base_url` and `token` arguments.
 
 This client keeps the surface intentionally thin — a `_post` helper plus
 one method per documented endpoint. Higher-level orchestration (search→
@@ -13,7 +12,6 @@ checkAvailability→placeOrder) lives in the proxy router.
 from __future__ import annotations
 
 import logging
-import os
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -25,33 +23,15 @@ logger = logging.getLogger(__name__)
 DEFAULT_TIMEOUT_SECONDS = 60.0
 
 
-def _base_url() -> str:
-    url = (os.environ.get("PAXIMUM_BASE_URL") or "").rstrip("/")
-    if not url:
-        raise PaximumError(
-            500,
-            "PAXIMUM_BASE_URL ortam değişkeni tanımlı değil. Replit Secrets üzerinden ekleyin.",
-        )
-    return url
-
-
-def _token() -> str:
-    tok = os.environ.get("PAXIMUM_BEARER_TOKEN") or ""
-    if not tok:
-        raise PaximumError(
-            500,
-            "PAXIMUM_BEARER_TOKEN ortam değişkeni tanımlı değil. Replit Secrets üzerinden ekleyin.",
-        )
-    return tok
-
-
 class PaximumClient:
     """Stateless wrapper around the Paximum REST API."""
 
-    def __init__(self, *, base_url: Optional[str] = None, token: Optional[str] = None,
+    def __init__(self, *, base_url: str, token: str,
                  timeout: float = DEFAULT_TIMEOUT_SECONDS):
-        self._base_url = (base_url or _base_url()).rstrip("/")
-        self._token = token or _token()
+        if not base_url or not token:
+            raise PaximumError(400, "Paximum credentials eksik (base_url/bearer_token).")
+        self._base_url = base_url.rstrip("/")
+        self._token = token
         self._timeout = timeout
 
     # ───────────────── Low-level helper ─────────────────

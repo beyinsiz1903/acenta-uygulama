@@ -242,7 +242,7 @@ async def search_offers(
             err_code = None
             http_status = None
             try:
-                pax_resp = await supplier_search_service.search_paximum_offers(organization_id, pax_payload)
+                pax_resp = await supplier_search_service.search_paximum_offers(db, organization_id, pax_payload)
                 pax_succeeded = True
             except AppError as exc:
                 supplier_warnings.append(map_exception_to_warning("paximum", exc))

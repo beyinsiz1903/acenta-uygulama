@@ -68,11 +68,11 @@ SUPPORTED_SUPPLIERS = {
         "auth_endpoint": "/api/auth/token",
     },
     "paximum": {
-        "name": "Paximum Travel API",
-        "type": "hotel+transfer+activity",
-        "product_types": ["hotel", "transfer", "activity"],
-        "fields": ["base_url", "username", "password", "agency_code"],
-        "auth_endpoint": "/api/authenticationservice/login",
+        "name": "Paximum Hotel Marketplace (San TSG REST)",
+        "type": "hotel",
+        "product_types": ["hotel"],
+        "fields": ["base_url", "bearer_token"],
+        "auth_endpoint": "Bearer token (long-lived, issued by Paximum)",
     },
     "wtatil": {
         "name": "WTatil Tour API",
@@ -326,47 +326,56 @@ async def _test_wtatil(db, organization_id: str, creds: dict) -> dict[str, Any]:
 
 
 async def _test_paximum(db, organization_id: str, creds: dict) -> dict[str, Any]:
-    """Test paximum connection via auth endpoint."""
+    """Test Paximum connection by calling hoteldetails on a known certification hotel.
+
+    Paximum REST uses a long-lived bearer token (no Login). We call a cheap
+    real endpoint with a known-valid hotel id (Bonnington JLT = 326105) to
+    prove the token is accepted by the API.
+    """
     import httpx
     import time
 
-    base_url = creds.get("base_url", "").rstrip("/")
-    username = creds.get("username", "")
-    password = creds.get("password", "")
-    agency_code = creds.get("agency_code", "")
-    if not base_url or not username or not password:
-        return {"verdict": "FAIL", "error": "base_url, username, and password are required"}
+    base_url = (creds.get("base_url") or "").rstrip("/")
+    token = creds.get("bearer_token", "")
+    if not base_url or not token:
+        return {"verdict": "FAIL", "error": "base_url and bearer_token are required"}
 
     start = time.monotonic()
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
             resp = await client.post(
-                f"{base_url}/api/authenticationservice/login",
-                json={"Agency": agency_code, "User": username, "Password": password},
+                f"{base_url}/v1/search/hoteldetails",
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Content-Type": "application/json; charset=utf-8",
+                    "Accept": "application/json",
+                },
+                json={"hotelId": "326105"},
             )
         latency_ms = round((time.monotonic() - start) * 1000, 1)
         if resp.status_code == 200:
-            data = resp.json()
-            body = data.get("body") or data
-            token = body.get("token") or body.get("Token") or ""
-            if token:
-                await db["supplier_tokens"].update_one(
-                    {"organization_id": organization_id, "supplier": "paximum"},
-                    {"$set": {"token": token, "obtained_at": _ts(), "expires_hours": 24}},
-                    upsert=True,
-                )
-                await db["supplier_credentials"].update_one(
-                    {"organization_id": organization_id, "supplier": "paximum"},
-                    {"$set": {"status": "connected", "connected_at": _ts(), "last_tested": _ts()}},
-                )
-                return {"verdict": "PASS", "supplier": "paximum", "status": "connected", "latency_ms": latency_ms}
-            return {"verdict": "FAIL", "supplier": "paximum", "status": "auth_failed", "latency_ms": latency_ms, "message": "No token in response"}
-        else:
             await db["supplier_credentials"].update_one(
                 {"organization_id": organization_id, "supplier": "paximum"},
-                {"$set": {"status": "auth_failed", "last_tested": _ts()}},
+                {"$set": {"status": "connected", "connected_at": _ts(), "last_tested": _ts()}},
             )
-            return {"verdict": "FAIL", "supplier": "paximum", "http_status": resp.status_code, "latency_ms": latency_ms}
+            return {
+                "verdict": "PASS",
+                "supplier": "paximum",
+                "status": "connected",
+                "latency_ms": latency_ms,
+                "message": "Bearer token kabul edildi (hoteldetails 200).",
+            }
+        await db["supplier_credentials"].update_one(
+            {"organization_id": organization_id, "supplier": "paximum"},
+            {"$set": {"status": "auth_failed", "last_tested": _ts()}},
+        )
+        return {
+            "verdict": "FAIL",
+            "supplier": "paximum",
+            "http_status": resp.status_code,
+            "latency_ms": latency_ms,
+            "response": resp.text[:200],
+        }
     except httpx.ConnectError as e:
         return {"verdict": "FAIL", "supplier": "paximum", "status": "connection_error", "error": str(e)}
     except httpx.TimeoutException:

@@ -326,8 +326,23 @@ class PaximumAdapter:
 
 
 # ---------------------------------------------------------------------------
-# Backward-compatible singleton for supplier_search_service (Sprint 3 compat)
+# Sprint 3 compat shim (DEPRECATED — DO NOT USE IN NEW CODE).
+#
+# The legacy `paximum_adapter` singleton previously read PAXIMUM_API_KEY from
+# the global environment, which was a cross-tenant credential leak surface.
+# All production routes now use per-tenant credentials loaded from the
+# encrypted `supplier_credentials` collection (see _adapter_for in
+# `app/modules/supplier/routers/paximum_router.py`).
+#
+# This singleton remains only for backward compatibility with the unmounted
+# `services/supplier_search_service.search_paximum_offers` function and
+# Sprint 3 exit-gate tests (currently `@pytest.mark.skipif(True)`).
+# It is created lazily so import-time has no env coupling.
 # ---------------------------------------------------------------------------
+
+_paximum_adapter_singleton: Optional["PaximumAdapter"] = None
+
+
 def _create_default_adapter() -> PaximumAdapter:
     from app.config import PAXIMUM_API_KEY, PAXIMUM_BASE_URL, PAXIMUM_TIMEOUT_SECONDS
 
@@ -338,4 +353,11 @@ def _create_default_adapter() -> PaximumAdapter:
     )
 
 
-paximum_adapter = _create_default_adapter()
+def __getattr__(name: str):
+    """Lazy-create the legacy singleton on first attribute access only."""
+    global _paximum_adapter_singleton
+    if name == "paximum_adapter":
+        if _paximum_adapter_singleton is None:
+            _paximum_adapter_singleton = _create_default_adapter()
+        return _paximum_adapter_singleton
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

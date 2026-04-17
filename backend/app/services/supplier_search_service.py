@@ -4,16 +4,17 @@ from typing import Any, Dict
 
 from fastapi import status
 
+from app.domain.suppliers.supplier_credentials_service import get_decrypted_credentials
 from app.errors import AppError
 from app.services.suppliers.paximum_adapter import (
+    PaximumAdapter,
     PaximumAuthError,
     PaximumError,
     PaximumRetryableError,
-    paximum_adapter,
 )
 
 
-async def search_paximum_offers(organization_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+async def search_paximum_offers(db, organization_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     """Search Paximum upstream and normalize to internal offer shape.
 
     Gate responsibilities:
@@ -33,8 +34,22 @@ async def search_paximum_offers(organization_id: str, payload: Dict[str, Any]) -
     destinations = [destination] if destination else payload.get("destinations", [])
     rooms = payload.get("rooms", [{"adults": 2, "childrenAges": []}])
 
+    # Load per-tenant Paximum credentials (no global env singleton).
+    creds = await get_decrypted_credentials(db, organization_id, "paximum")
+    if not creds or not creds.get("base_url") or not creds.get("bearer_token"):
+        raise AppError(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            code="SUPPLIER_NOT_CONFIGURED",
+            message="Paximum credentials are not configured for this agency.",
+            details={
+                "supplier": "paximum",
+                "hint": "Configure base_url and bearer_token via Tedarikçi Ayarları > Paximum.",
+            },
+        )
+    adapter = PaximumAdapter(base_url=creds["base_url"], token=creds["bearer_token"])
+
     try:
-        result = await paximum_adapter.search_hotels(
+        result = await adapter.search_hotels(
             destinations=destinations,
             rooms=rooms,
             check_in_date=payload.get("checkInDate", ""),

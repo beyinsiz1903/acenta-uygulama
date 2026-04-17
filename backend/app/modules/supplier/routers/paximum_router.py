@@ -1,6 +1,12 @@
-"""Paximum Supplier Router — Full booking lifecycle endpoints.
+"""Paximum Supplier Router — Full booking lifecycle endpoints (PER-TENANT).
 
-Endpoints:
+Each request loads the calling agency's Paximum credentials (base_url +
+bearer_token) from the encrypted `supplier_credentials` collection
+(see Tedarikçi Ayarları > Paximum). NO env-var / global singleton is used,
+so cross-tenant credential leakage is structurally impossible on these
+routes.
+
+Endpoints (mounted at /api/suppliers/paximum/*):
 - POST /search         → Hotel search
 - POST /hotel-details  → Hotel detail
 - POST /check-availability → Offer availability check
@@ -16,20 +22,22 @@ import logging
 import uuid
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, Header, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel, Field
 
 from app.auth import get_current_user
 from app.context_org import get_current_org
+from app.db import get_db
+from app.domain.suppliers.supplier_credentials_service import get_decrypted_credentials
 from app.errors import AppError
 from app.services.suppliers.offer_cache import offer_cache
 from app.services.suppliers.paximum_adapter import (
+    PaximumAdapter,
     PaximumAuthError,
     PaximumError,
     PaximumNotFoundError,
     PaximumRetryableError,
     PaximumValidationError,
-    paximum_adapter,
 )
 from app.services.suppliers.status_mapping import resolve_all
 
@@ -138,6 +146,27 @@ class CancelBookingRequest(BaseModel):
 
 def _trace_id(x_trace_id: Optional[str] = None) -> str:
     return x_trace_id or f"syroce-{uuid.uuid4().hex[:12]}"
+
+
+async def _adapter_for(org: dict, db) -> PaximumAdapter:
+    """Build a per-tenant PaximumAdapter from encrypted supplier credentials.
+
+    Raises HTTPException(400) if the calling agency has not configured
+    Paximum credentials yet (Tedarikçi Ayarları > Paximum).
+    """
+    org_id = str(org.get("id") or org.get("_id") or "")
+    if not org_id:
+        raise HTTPException(status_code=400, detail="Aktif kullanıcı bir organizasyona bağlı değil.")
+    creds = await get_decrypted_credentials(db, org_id, "paximum")
+    if not creds or not creds.get("base_url") or not creds.get("bearer_token"):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Bu acente için Paximum credential'ları tanımlı değil. "
+                "Tedarikçi Ayarları > Paximum sayfasından base_url ve bearer_token girin."
+            ),
+        )
+    return PaximumAdapter(base_url=creds["base_url"], token=creds["bearer_token"])
 
 
 def _serialize_money(m):
@@ -277,11 +306,13 @@ async def paximum_search(
     payload: PaximumSearchRequest,
     user=Depends(get_current_user),
     org=Depends(get_current_org),
+    db=Depends(get_db),
     x_trace_id: Optional[str] = Header(None),
 ) -> Dict[str, Any]:
     trace = _trace_id(x_trace_id)
+    adapter = await _adapter_for(org, db)
     try:
-        result = await paximum_adapter.search_hotels(
+        result = await adapter.search_hotels(
             destinations=[d.model_dump() for d in payload.destinations],
             rooms=[r.model_dump() for r in payload.rooms],
             check_in_date=payload.checkInDate,
@@ -325,11 +356,13 @@ async def paximum_hotel_details(
     payload: HotelDetailsRequest,
     user=Depends(get_current_user),
     org=Depends(get_current_org),
+    db=Depends(get_db),
     x_trace_id: Optional[str] = Header(None),
 ) -> Dict[str, Any]:
     trace = _trace_id(x_trace_id)
+    adapter = await _adapter_for(org, db)
     try:
-        hotel = await paximum_adapter.get_hotel_details(payload.hotelId, trace_id=trace)
+        hotel = await adapter.get_hotel_details(payload.hotelId, trace_id=trace)
     except PaximumError as exc:
         raise _map_paximum_error(exc) from exc
 
@@ -341,6 +374,7 @@ async def paximum_check_availability(
     payload: CheckAvailabilityRequest,
     user=Depends(get_current_user),
     org=Depends(get_current_org),
+    db=Depends(get_db),
     x_trace_id: Optional[str] = Header(None),
 ) -> Dict[str, Any]:
     trace = _trace_id(x_trace_id)
@@ -350,8 +384,9 @@ async def paximum_check_availability(
     if cached and not cached.is_expired():
         return {"offer": _serialize_offer(cached), "trace_id": trace, "cache_hit": True}
 
+    adapter = await _adapter_for(org, db)
     try:
-        offer = await paximum_adapter.check_availability(payload.offerId, trace_id=trace)
+        offer = await adapter.check_availability(payload.offerId, trace_id=trace)
     except PaximumError as exc:
         raise _map_paximum_error(exc) from exc
 
@@ -370,13 +405,14 @@ async def paximum_place_order(
     payload: PlaceOrderRequest,
     user=Depends(get_current_user),
     org=Depends(get_current_org),
+    db=Depends(get_db),
     x_trace_id: Optional[str] = Header(None),
 ) -> Dict[str, Any]:
     trace = _trace_id(x_trace_id)
     ref = payload.agencyReferenceNumber or f"SYR-{uuid.uuid4().hex[:10].upper()}"
-
+    adapter = await _adapter_for(org, db)
     try:
-        result = await paximum_adapter.place_order(
+        result = await adapter.place_order(
             travellers=[t.model_dump() for t in payload.travellers],
             hotel_bookings=[hb.model_dump() for hb in payload.hotelBookings],
             agency_reference_number=ref,
@@ -397,11 +433,13 @@ async def paximum_get_bookings(
     payload: GetBookingsRequest,
     user=Depends(get_current_user),
     org=Depends(get_current_org),
+    db=Depends(get_db),
     x_trace_id: Optional[str] = Header(None),
 ) -> Dict[str, Any]:
     trace = _trace_id(x_trace_id)
+    adapter = await _adapter_for(org, db)
     try:
-        bookings = await paximum_adapter.get_bookings(
+        bookings = await adapter.get_bookings(
             from_date=payload.fromDate,
             to_date=payload.toDate,
             checkin_from=payload.checkInFrom,
@@ -425,11 +463,13 @@ async def paximum_booking_details(
     payload: BookingDetailsRequest,
     user=Depends(get_current_user),
     org=Depends(get_current_org),
+    db=Depends(get_db),
     x_trace_id: Optional[str] = Header(None),
 ) -> Dict[str, Any]:
     trace = _trace_id(x_trace_id)
+    adapter = await _adapter_for(org, db)
     try:
-        booking = await paximum_adapter.get_booking_details(
+        booking = await adapter.get_booking_details(
             booking_id=payload.bookingId,
             booking_number=payload.bookingNumber,
             agency_reference_number=payload.agencyReferenceNumber,
@@ -446,11 +486,13 @@ async def paximum_cancel_fee(
     payload: CancelFeeRequest,
     user=Depends(get_current_user),
     org=Depends(get_current_org),
+    db=Depends(get_db),
     x_trace_id: Optional[str] = Header(None),
 ) -> Dict[str, Any]:
     trace = _trace_id(x_trace_id)
+    adapter = await _adapter_for(org, db)
     try:
-        fee = await paximum_adapter.get_cancellation_fee(payload.bookingId, trace_id=trace)
+        fee = await adapter.get_cancellation_fee(payload.bookingId, trace_id=trace)
     except PaximumError as exc:
         raise _map_paximum_error(exc) from exc
 
@@ -462,11 +504,13 @@ async def paximum_cancel_booking(
     payload: CancelBookingRequest,
     user=Depends(get_current_user),
     org=Depends(get_current_org),
+    db=Depends(get_db),
     x_trace_id: Optional[str] = Header(None),
 ) -> Dict[str, Any]:
     trace = _trace_id(x_trace_id)
+    adapter = await _adapter_for(org, db)
     try:
-        result = await paximum_adapter.cancel_booking(
+        result = await adapter.cancel_booking(
             booking_id=payload.bookingId,
             booking_number=payload.bookingNumber,
             trace_id=trace,

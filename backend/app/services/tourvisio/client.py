@@ -1,22 +1,21 @@
 """Async HTTP client for TourVisio (San TSG) — multi-product API.
 
-All endpoints are POST with JSON `{header, body}` envelope. Auth is Login-based:
-the client logs in once, caches the bearer token until `expiresOn`, and reuses
-it across calls. The client exposes:
+Per-tenant: each instance is constructed with the calling agency's own
+credentials (base_url, agency, user, password). Credentials are NOT read from
+environment variables — they are loaded by the router from the encrypted
+`supplier_credentials` collection (see `app.domain.suppliers.supplier_credentials_service`).
 
-  * `request(path, body)` — generic POST returning the unwrapped `body` dict.
-  * Typed convenience wrappers for the most common endpoints (autocomplete,
-    pricesearch, product info, booking lifecycle, lookups).
-
-Higher-level orchestration lives in the proxy router.
+Auth is Login-based: the client logs in once, caches the bearer token until
+`expiresOn` in a process-wide dict keyed by `(base_url, agency, user)`, and
+reuses it across calls. The cache is shared across requests but partitioned
+by tenant so different agencies never share tokens.
 """
 from __future__ import annotations
 
 import asyncio
 import logging
-import os
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional, Tuple
 
 import httpx
 
@@ -28,18 +27,8 @@ DEFAULT_TIMEOUT_SECONDS = 60.0
 LOGIN_PATH = "/api/authenticationservice/login"
 
 
-def _env(name: str) -> str:
-    val = os.environ.get(name) or ""
-    if not val:
-        raise TourVisioError(
-            500,
-            f"{name} ortam değişkeni tanımlı değil. Replit Secrets üzerinden ekleyin.",
-        )
-    return val
-
-
-class _TokenCache:
-    """Process-wide cache for the TourVisio bearer token."""
+class _TokenEntry:
+    __slots__ = ("token", "expires_at", "lock")
 
     def __init__(self) -> None:
         self.token: Optional[str] = None
@@ -49,35 +38,50 @@ class _TokenCache:
     def is_valid(self) -> bool:
         if not self.token or not self.expires_at:
             return False
-        # 60s safety margin
         return datetime.now(timezone.utc) < (self.expires_at - timedelta(seconds=60))
 
 
-_token_cache = _TokenCache()
+# process-wide cache keyed by (base_url, agency, user)
+_TOKENS: Dict[Tuple[str, str, str], _TokenEntry] = {}
+_TOKENS_LOCK = asyncio.Lock()
+
+
+async def _get_entry(key: Tuple[str, str, str]) -> _TokenEntry:
+    entry = _TOKENS.get(key)
+    if entry is not None:
+        return entry
+    async with _TOKENS_LOCK:
+        entry = _TOKENS.get(key)
+        if entry is None:
+            entry = _TokenEntry()
+            _TOKENS[key] = entry
+        return entry
 
 
 class TourVisioClient:
-    """Async wrapper around the TourVisio multi-product API."""
+    """Async wrapper around the TourVisio multi-product API (per-tenant)."""
 
     def __init__(
         self,
         *,
-        base_url: Optional[str] = None,
-        agency: Optional[str] = None,
-        user: Optional[str] = None,
-        password: Optional[str] = None,
+        base_url: str,
+        agency: str,
+        user: str,
+        password: str,
         timeout: float = DEFAULT_TIMEOUT_SECONDS,
     ):
-        self._base_url = (base_url or _env("TOURVISIO_BASE_URL")).rstrip("/")
-        self._agency = agency or _env("TOURVISIO_AGENCY")
-        self._user = user or _env("TOURVISIO_USER")
-        self._password = password or _env("TOURVISIO_PASSWORD")
+        if not (base_url and agency and user and password):
+            raise TourVisioError(400, "TourVisio credentials eksik (base_url/agency/user/password).")
+        self._base_url = base_url.rstrip("/")
+        self._agency = agency
+        self._user = user
+        self._password = password
         self._timeout = timeout
+        self._cache_key = (self._base_url, self._agency, self._user)
 
     # ───────────────── Auth ─────────────────
 
-    async def _login(self) -> str:
-        """Perform Login and update the shared token cache. Returns the token."""
+    async def _login(self, entry: _TokenEntry) -> str:
         url = f"{self._base_url}{LOGIN_PATH}"
         body = {
             "header": None,
@@ -89,14 +93,10 @@ class TourVisioClient:
         }
         try:
             async with httpx.AsyncClient(timeout=self._timeout) as cli:
-                resp = await cli.post(
-                    url,
-                    headers={
-                        "Content-Type": "application/json; charset=utf-8",
-                        "Accept": "application/json",
-                    },
-                    json=body,
-                )
+                resp = await cli.post(url, headers={
+                    "Content-Type": "application/json; charset=utf-8",
+                    "Accept": "application/json",
+                }, json=body)
         except httpx.TimeoutException as exc:
             raise TourVisioError(504, "TourVisio login timeout") from exc
         except httpx.HTTPError as exc:
@@ -122,12 +122,9 @@ class TourVisioClient:
         if not token:
             raise TourVisioError(502, "TourVisio login token döndürmedi", payload=data)
 
-        # Parse expiresOn (ISO format) — fall back to 8h if unparseable
-        expires_at: datetime
         try:
             if expires_on:
-                # tolerate 'Z' suffix and missing tz
-                clean = expires_on.replace("Z", "+00:00")
+                clean = str(expires_on).replace("Z", "+00:00")
                 parsed = datetime.fromisoformat(clean)
                 if parsed.tzinfo is None:
                     parsed = parsed.replace(tzinfo=timezone.utc)
@@ -137,41 +134,59 @@ class TourVisioClient:
         except Exception:
             expires_at = datetime.now(timezone.utc) + timedelta(hours=8)
 
-        _token_cache.token = token
-        _token_cache.expires_at = expires_at
-        logger.info("TourVisio login OK; token cached until %s", expires_at.isoformat())
+        entry.token = token
+        entry.expires_at = expires_at
+        logger.info("TourVisio login OK (agency=%s); token cached until %s",
+                    self._agency, expires_at.isoformat())
         return token
 
     async def _get_token(self) -> str:
-        if _token_cache.is_valid() and _token_cache.token:
-            return _token_cache.token
-        async with _token_cache.lock:
-            if _token_cache.is_valid() and _token_cache.token:
-                return _token_cache.token
-            return await self._login()
+        entry = await _get_entry(self._cache_key)
+        if entry.is_valid() and entry.token:
+            return entry.token
+        async with entry.lock:
+            if entry.is_valid() and entry.token:
+                return entry.token
+            return await self._login(entry)
+
+    async def login(self) -> Dict[str, Any]:
+        """Force a fresh Login (clears cache for this tenant first)."""
+        entry = await _get_entry(self._cache_key)
+        async with entry.lock:
+            entry.token = None
+            entry.expires_at = None
+            await self._login(entry)
+        return self.token_status()
+
+    def token_status(self) -> Dict[str, Any]:
+        entry = _TOKENS.get(self._cache_key)
+        return {
+            "has_token": bool(entry and entry.token),
+            "expires_at": entry.expires_at.isoformat() if entry and entry.expires_at else None,
+            "valid": bool(entry and entry.is_valid()),
+        }
+
+    def clear_token(self) -> None:
+        entry = _TOKENS.get(self._cache_key)
+        if entry:
+            entry.token = None
+            entry.expires_at = None
 
     # ───────────────── Generic POST ─────────────────
 
     async def request(self, path: str, body: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        """POST to `path` with `{header: {token}, body}` envelope; return unwrapped `body`.
-
-        Raises `TourVisioError` on transport errors, HTTP >= 400, or `header.success=false`.
-        """
         if not path.startswith("/"):
             path = "/" + path
         token = await self._get_token()
         url = f"{self._base_url}{path}"
         envelope = {"header": {"token": token}, "body": body or {}}
+        headers = {
+            "Content-Type": "application/json; charset=utf-8",
+            "Accept": "application/json",
+        }
         try:
             async with httpx.AsyncClient(timeout=self._timeout) as cli:
-                resp = await cli.post(
-                    url,
-                    headers={
-                        "Content-Type": "application/json; charset=utf-8",
-                        "Accept": "application/json",
-                    },
-                    json=envelope,
-                )
+                resp = await cli.post(url, headers=headers, json=envelope)
         except httpx.TimeoutException as exc:
             raise TourVisioError(504, f"TourVisio yanıt vermedi (timeout): {path}") from exc
         except httpx.HTTPError as exc:
@@ -179,16 +194,12 @@ class TourVisioClient:
 
         # Token expired mid-call? Force re-login once.
         if resp.status_code in (401, 403):
-            _token_cache.token = None
-            _token_cache.expires_at = None
+            self.clear_token()
             token = await self._get_token()
             envelope["header"]["token"] = token
             try:
                 async with httpx.AsyncClient(timeout=self._timeout) as cli:
-                    resp = await cli.post(url, headers={
-                        "Content-Type": "application/json; charset=utf-8",
-                        "Accept": "application/json",
-                    }, json=envelope)
+                    resp = await cli.post(url, headers=headers, json=envelope)
             except httpx.HTTPError as exc:
                 raise TourVisioError(502, f"TourVisio bağlantı hatası (retry): {exc}") from exc
 
@@ -226,7 +237,6 @@ class TourVisioClient:
     # ───────────────── Search (productservice) ─────────────────
 
     async def autocomplete(self, body: Dict[str, Any]) -> Dict[str, Any]:
-        """Generic autocomplete (cities/hotels/airports/etc) — caller supplies productType."""
         return await self.request("/api/productservice/getarrivalautocomplete", body)
 
     async def departure_autocomplete(self, body: Dict[str, Any]) -> Dict[str, Any]:
@@ -236,26 +246,19 @@ class TourVisioClient:
         return await self.request("/api/productservice/getcheckindates", body)
 
     async def price_search(self, body: Dict[str, Any]) -> Dict[str, Any]:
-        """Universal price search — works for all product types via `productType` field.
-
-        ProductType IDs:
-          1=Holiday Package, 2=Hotel, 3=Flight, 4=Excursion, 5=Transfer,
-          6=Tour Culture Package, 13=Dynamic Package, 14=Rent a Car
-        """
+        """Universal price search — works for all product types via `productType` field."""
         return await self.request("/api/productservice/pricesearch", body)
 
     async def get_product_info(self, body: Dict[str, Any]) -> Dict[str, Any]:
-        """Hotel/product detail by offer/product ID."""
         return await self.request("/api/productservice/getproductinfo", body)
 
     async def get_offer_details(self, body: Dict[str, Any]) -> Dict[str, Any]:
         return await self.request("/api/productservice/getofferdetails", body)
 
     async def get_fare_rules(self, body: Dict[str, Any]) -> Dict[str, Any]:
-        """Flight fare rules."""
         return await self.request("/api/productservice/getfarerules", body)
 
-    # ───────────────── Booking (bookingservice) ─────────────────
+    # ───────────────── Booking ─────────────────
 
     async def begin_transaction(self, body: Dict[str, Any]) -> Dict[str, Any]:
         return await self.request("/api/bookingservice/begintransaction", body)
@@ -277,17 +280,8 @@ class TourVisioClient:
     async def cancel_reservation(self, body: Dict[str, Any]) -> Dict[str, Any]:
         return await self.request("/api/bookingservice/cancelreservation", body)
 
-    # ───────────────── Token cache helpers ─────────────────
+    # ───────────────── Class-level cache helpers ─────────────────
 
     @staticmethod
-    def clear_cached_token() -> None:
-        _token_cache.token = None
-        _token_cache.expires_at = None
-
-    @staticmethod
-    def cached_token_status() -> Dict[str, Any]:
-        return {
-            "has_token": bool(_token_cache.token),
-            "expires_at": _token_cache.expires_at.isoformat() if _token_cache.expires_at else None,
-            "valid": _token_cache.is_valid(),
-        }
+    def clear_all_cached_tokens() -> None:
+        _TOKENS.clear()

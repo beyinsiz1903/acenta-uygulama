@@ -81,6 +81,13 @@ SUPPORTED_SUPPLIERS = {
         "fields": ["base_url", "application_secret_key", "username", "password", "agency_id"],
         "auth_endpoint": "/api/Auth/get-token-async",
     },
+    "tourvisio": {
+        "name": "TourVisio (San TSG) Multi-Product API",
+        "type": "hotel+flight+transfer+rentacar+excursion+package",
+        "product_types": ["hotel", "flight", "transfer", "rentacar", "excursion", "package", "tour", "dynamic_package"],
+        "fields": ["base_url", "agency", "username", "password"],
+        "auth_endpoint": "/api/authenticationservice/login",
+    },
 }
 
 
@@ -222,6 +229,8 @@ async def test_connection(db, organization_id: str, supplier: str, *, actor: str
         result = await _test_ratehawk(db, organization_id, creds)
     elif supplier == "tbo":
         result = await _test_tbo(db, organization_id, creds)
+    elif supplier == "tourvisio":
+        result = await _test_tourvisio(db, organization_id, creds)
     else:
         return {"verdict": "FAIL", "error": f"No test handler for {supplier}"}
 
@@ -461,6 +470,49 @@ async def _test_tbo(db, organization_id: str, creds: dict) -> dict[str, Any]:
         return {"verdict": "FAIL", "supplier": "tbo", "status": "timeout", "error": "Connection timed out (15s)"}
     except Exception as e:
         return {"verdict": "FAIL", "supplier": "tbo", "error": str(e)}
+
+
+async def _test_tourvisio(db, organization_id: str, creds: dict) -> dict[str, Any]:
+    """Test TourVisio (San TSG) connection by calling Login."""
+    import time
+    from app.services.tourvisio import TourVisioClient, TourVisioError
+
+    base_url = (creds.get("base_url") or "").rstrip("/")
+    agency = creds.get("agency", "")
+    username = creds.get("username", "")
+    password = creds.get("password", "")
+    if not (base_url and agency and username and password):
+        return {"verdict": "FAIL", "error": "base_url, agency, username, password required"}
+
+    start = time.monotonic()
+    try:
+        client = TourVisioClient(base_url=base_url, agency=agency, user=username, password=password)
+        # Force fresh login (bypass any stale cached token for this tenant key)
+        client.clear_token()
+        await client.login()
+        latency_ms = round((time.monotonic() - start) * 1000, 1)
+        status = client.token_status()
+        await db["supplier_credentials"].update_one(
+            {"organization_id": organization_id, "supplier": "tourvisio"},
+            {"$set": {"status": "connected", "connected_at": _ts(), "last_tested": _ts()}},
+        )
+        return {
+            "verdict": "PASS",
+            "supplier": "tourvisio",
+            "status": "connected",
+            "latency_ms": latency_ms,
+            "token_expires_at": status.get("expires_at"),
+            "message": "TourVisio Login başarılı, token cache'lendi.",
+        }
+    except TourVisioError as e:
+        await db["supplier_credentials"].update_one(
+            {"organization_id": organization_id, "supplier": "tourvisio"},
+            {"$set": {"status": "auth_failed", "last_tested": _ts()}},
+        )
+        return {"verdict": "FAIL", "supplier": "tourvisio",
+                "http_status": e.status_code, "error": e.message}
+    except Exception as e:
+        return {"verdict": "FAIL", "supplier": "tourvisio", "error": str(e)}
 
 
 async def get_cached_token(db, organization_id: str, supplier: str) -> str | None:

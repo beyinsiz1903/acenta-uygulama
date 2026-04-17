@@ -187,7 +187,9 @@ export default function TourVisioTestPage() {
       <h1 style={{ fontSize: 22, color: "#0f172a", marginBottom: 8 }}>TourVisio (San TSG) Test Konsolu</h1>
       <p style={{ color: "#64748b", fontSize: 13, marginBottom: 16 }}>
         TourVisio çoklu ürün API'si — Uçak, Otel, Transfer, Araç, Excursion, Tatil Paketi, Tour Culture, Dynamic Package
-        ve booking/cancellation/lookup uç noktalarına proxy. Yetki: super_admin / admin / operator.
+        ve booking/cancellation/lookup uç noktalarına proxy. <b>Per-tenant:</b> her acente
+        kendi TourVisio credential'larını <i>Tedarikçi Ayarları &gt; TourVisio</i> sayfasından
+        girer; bu konsol giriş yapan acentenin credential'larını kullanır.
       </p>
 
       <Section

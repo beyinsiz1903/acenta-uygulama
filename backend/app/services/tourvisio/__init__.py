@@ -1,14 +1,13 @@
 """TourVisio (San TSG) multi-product integration.
 
 Owner: Inventory Domain.
-Auth: Login (Agency/User/Password) -> bearer token (cached until expiresOn).
-All endpoints share an envelope: {header: {requestId, success, messages}, body: ...}
+Auth: per-tenant Login (Agency/User/Password) -> bearer token (cached until
+expiresOn, partitioned by tenant credentials). Each Syroce agency stores its
+own TourVisio credentials in the encrypted `supplier_credentials` collection
+(see `app.domain.suppliers.supplier_credentials_service`). Routers load
+credentials based on the calling user's organization.
 
-Configured via env vars:
-  TOURVISIO_BASE_URL  - e.g. http://service.stage.paximum.com (no trailing slash)
-  TOURVISIO_AGENCY    - agency code
-  TOURVISIO_USER      - user name
-  TOURVISIO_PASSWORD  - user password
+All responses share an envelope: {header: {requestId, success, messages}, body: ...}
 """
 from app.services.tourvisio.client import TourVisioClient
 from app.services.tourvisio.errors import TourVisioError

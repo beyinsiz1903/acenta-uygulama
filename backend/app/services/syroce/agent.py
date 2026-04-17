@@ -124,9 +124,12 @@ class SyroceAgentClient:
         q: Optional[str] = None,
     ) -> Dict[str, Any]:
         params: Dict[str, Any] = {}
-        if city: params["city"] = city
-        if country: params["country"] = country
-        if q: params["q"] = q
+        if city:
+            params["city"] = city
+        if country:
+            params["country"] = country
+        if q:
+            params["q"] = q
         return await self._request("GET", "/hotels", params=params or None)
 
     async def search_availability(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -153,5 +156,6 @@ class SyroceAgentClient:
         self, *, period_start: str, period_end: str, tenant_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         params: Dict[str, Any] = {"period_start": period_start, "period_end": period_end}
-        if tenant_id: params["tenant_id"] = tenant_id
+        if tenant_id:
+            params["tenant_id"] = tenant_id
         return await self._request("GET", "/reconciliation/agency", params=params)

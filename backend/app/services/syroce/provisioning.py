@@ -12,7 +12,6 @@ Failures do NOT roll back the user/organization signup — the org just gets a
 """
 from __future__ import annotations
 
-import asyncio
 import logging
 import os
 import uuid

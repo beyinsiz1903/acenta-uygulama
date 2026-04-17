@@ -1,0 +1,429 @@
+Booking Details
+Last Update Date: 13.07.2023
+
+Overview
+This API endpoint retrieves comprehensive booking information. It allows you to fetch detailed booking data including pricing, traveller information, hotel details, and cancellation policies using different types of identifiers. This is essential to access complete reservation information for customer service, modifications, or reporting purposes.
+
+Request URL
+http://api.stage.paximum.com/v1/booking/getbuyerbooking
+Request Model
+Attribute	Type	Required	Description
+BookingId	String	No	Booking Id
+BookingNumber	String	No	Booking number
+AgencyReferenceNumber	String	No	Your reference number
+Note: You only need to provide ONE of these parameters to retrieve booking details.
+
+Request Sample
+{
+  "bookingId": "59daaf84-6935-4b09-9f9b-01212af137b1"
+}
+Response Model
+Attribute	Type	Description
+BookingInfo	Object	This object contains offer information
+Response Sample
+{
+  "bookingInfo": {
+    "id": "59daaf84-6935-4b09-9f9b-01212af137b1",
+    "userId": "3711d95a-71e5-4c3b-9d5a-7ff70b4480ac",
+    "orderNumber": "7244",
+    "bookingNumber": "8250",
+    "supplierBookingNumber": "76-6190420",
+    "serviceType": "Hotel",
+    "serviceProvider": "afd4a0df-c5f9-44a2-8cd8-d918f6922a23",
+    "serviceProviderNotes": [
+      "Wheelchair-accessible NO. Check-out hour 12:00 – "
+    ],
+    "confirmationDate": "2016-02-04T12:43:03.662Z",
+    "issueDate": "2016-02-04T12:42:34.658Z",
+    "status": "Confirmed",
+    "totalBuyingAmount": {
+      "amount": 21.140,
+      "currency": "EUR"
+    },
+    "totalSellingAmount": {
+      "amount": 34.14000,
+      "currency": "EUR"
+    },
+    "markupChain": [
+      {
+        "accountId": "220b4f81-ff93-4b89-93f8-60b13e7e002b",
+        "markupAmount": {
+          "amount": 13.0,
+          "currency": "EUR"
+        },
+        "salePrice": {
+          "amount": 34.14000,
+          "currency": "EUR"
+        },
+        "cancellationFeeMarkup": {
+          "amount": 13.000000000000000000000000000,
+          "currency": "EUR"
+        },
+        "cancellationFee": {
+          "amount": 34.140000000000000000000000000,
+          "currency": "EUR"
+        },
+        "roomMarkups": [
+          {
+            "roomId": "05a34bd3-00f8-4c47-b395-32bca085c607",
+            "markupId": "9e1562d6-d758-4f6b-85af-85e059a6186c",
+            "markupAmount": {
+              "amount": 1.0,
+              "currency": "EUR"
+            },
+            "price": {
+              "amount": 22.14000,
+              "currency": "EUR"
+            }
+          },
+          {
+            "roomId": "05a34bd3-00f8-4c47-b395-32bca085c607",
+            "markupId": "d29062e5-e40a-4015-8221-17fa134a175f",
+            "markupAmount": {
+              "amount": 12.0,
+              "currency": "EUR"
+            },
+            "price": {
+              "amount": 34.14000,
+              "currency": "EUR"
+            }
+          }
+        ]
+      }
+    ],
+    "cancellationCharges": [
+      {
+        "buyingFee": {
+          "amount": 21.140,
+          "currency": "EUR"
+        },
+        "fee": {
+          "amount": 34.140000000000000000000000000,
+          "currency": "EUR"
+        },
+        "afterDate": "2016-02-04T00:00:00Z"
+      }
+    ],
+    "buyingCancellationFee": {
+      "amount": 0.0,
+      "currency": "DEFAULT"
+    },
+    "sellingCancellationFee": {
+      "amount": 34.140000000000000000000000000,
+      "currency": "EUR"
+    },
+    "buyingCancellationDeadline": "2016-02-03T23:59:00Z",
+    "sellingCancellationDeadline": "2016-02-04T00:00:00Z",
+    "details": {
+      "purchase": {
+        "reference": {
+          "fileNumber": "6190420",
+          "incomingOffice": {
+            "code": 76
+          }
+        },
+        "status": 1,
+        "statusSpecified": true,
+        "agency": {
+          "code": 120662,
+          "branch": 1
+        },
+        "language": "ENG",
+        "creationDate": {
+          "date": "20160204"
+        },
+        "creationUser": "PAXIMUMTR120662",
+        "holder": {
+          "age": 0,
+          "ageSpecified": true,
+          "name": "ASD",
+          "lastName": "ASD",
+          "type": 0
+        },
+        "agencyReference": "8250",
+        "serviceList": [
+          {
+            "packageRate": 0,
+            "packageRateSpecified": false,
+            "travelAgent": 0,
+            "travelAgentSpecified": false,
+            "hotelInfo": {
+              "category": {
+                "type": 0,
+                "code": "3EST",
+                "value": "3 STARS"
+              },
+              "destination": {
+                "name": "Antalya",
+                "zoneList": [
+                  {
+                    "type": 0,
+                    "code": "2",
+                    "serviceType": 0,
+                    "serviceTypeSpecified": false,
+                    "value": "Lara"
+                  }
+                ],
+                "type": 0,
+                "code": "AYT"
+              },
+              "code": "156565",
+              "name": "Lara World Hotel"
+            },
+            "availableRoom": [
+              {
+                "hotelOccupancy": {
+                  "roomCount": 1,
+                  "occupancy": {
+                    "adultCount": 2,
+                    "adultCountSpecified": true,
+                    "childCount": 0,
+                    "childCountSpecified": true,
+                    "guestList": [
+                      {
+                        "customerId": "2",
+                        "age": 30,
+                        "ageSpecified": true,
+                        "name": "asd",
+                        "lastName": "asd",
+                        "type": 0
+                      },
+                      {
+                        "customerId": "1",
+                        "age": 30,
+                        "ageSpecified": true,
+                        "name": "asd",
+                        "lastName": "asd",
+                        "type": 0
+                      }
+                    ]
+                  }
+                },
+                "hotelRoom": [
+                  {
+                    "board": {
+                      "type": 0,
+                      "code": "RO-T01",
+                      "value": "ROOM ONLY"
+                    },
+                    "roomType": {
+                      "type": 0,
+                      "code": "DBL-T01",
+                      "characteristic": "LV",
+                      "value": "DOUBLE LAND VIEW"
+                    },
+                    "productType": 0,
+                    "productTypeSpecified": true,
+                    "freeNights": 0,
+                    "freeNightsSpecified": false,
+                    "price": {
+                      "amount": "21.140",
+                      "netPrice": "0",
+                      "netPriceSpecified": false,
+                      "commission": "0",
+                      "commissionSpecified": false
+                    },
+                    "cancellationPolicies": {
+                      "cancellationPolicy": [
+                        {
+                          "amount": "21.140",
+                          "dateFrom": "20160203",
+                          "time": "2359"
+                        }
+                      ]
+                    },
+                    "hotelRoomExtraInfo": [
+                      {
+                        "name": "INFO_ROOM_AGENCY_BOOKING_STATUS",
+                        "value": "O"
+                      },
+                      {
+                        "name": "INFO_ROOM_INCOMING_BOOKING_STATUS",
+                        "value": "O"
+                      }
+                    ],
+                    "shrui": "MSGrQkgAz/yC8UgVG0LDcw==",
+                    "availCount": 1,
+                    "availCountSpecified": true,
+                    "onRequest": 0,
+                    "onRequestSpecified": false,
+                    "status": 1,
+                    "statusSpecified": true
+                  }
+                ]
+              }
+            ],
+            "reference": {
+              "fileNumber": "6190420-H1",
+              "incomingOffice": {
+                "code": 76
+              }
+            },
+            "status": 1,
+            "statusSpecified": true,
+            "directPayment": 1,
+            "directPaymentSpecified": true,
+            "contractList": [
+              {
+                "name": "ONLINE EUR",
+                "incomingOffice": {
+                  "code": 76
+                },
+                "commentList": [
+                  {
+                    "type": 3,
+                    "typeSpecified": true,
+                    "value": "Wheelchair-accessible NO. Check-out hour 12:00 – . "
+                  }
+                ]
+              }
+            ],
+            "supplier": {
+              "name": "TRAVEL PARTNER TURKEY TURIZM (PART OF HOTELBEDS)",
+              "vatNumber": "8590611756"
+            },
+            "dateFrom": {
+              "date": "20160204"
+            },
+            "dateTo": {
+              "date": "20160205"
+            },
+            "currency": {
+              "code": "EUR",
+              "value": "Euro"
+            },
+            "totalAmount": "21.140",
+            "totalAmountSpecified": true,
+            "netPrice": "0",
+            "netPriceSpecified": false,
+            "commission": "0",
+            "commissionSpecified": false,
+            "commissionPercentage": "0",
+            "commissionPercentageSpecified": false,
+            "valuationFileNumber": 0,
+            "valuationFileNumberSpecified": false,
+            "spui": "76#H#1"
+          }
+        ],
+        "currency": {
+          "code": "EUR"
+        },
+        "paymentData": {
+          "paymentType": {
+            "code": "C"
+          },
+          "invoiceCompany": {
+            "code": "T03",
+            "name": "TRAVEL PARTNER TURKEY TURIZM VE SEYAHAT A.S",
+            "registrationNumber": "8590611756"
+          },
+          "description": "The total amount for this pro-forma invoice should be made in full to Travel Partner Turkey Tu"
+        },
+        "totalPrice": "21.140",
+        "totalPriceSpecified": true,
+        "netPrice": "0",
+        "netPriceSpecified": false,
+        "pendingAmount": "21.140",
+        "pendingAmountSpecified": true,
+        "purchaseToken": "O3927697135",
+        "timeToExpiration": 1799981,
+        "timeToExpirationSpecified": true
+      },
+      "incomingOfficeCode": 76,
+      "fileNumber": "6190420",
+      "contractName": "ONLINE EUR",
+      "contractIncomingOfficeCode": 76,
+      "spui": "76#H#1",
+      "purchaseToken": "O3927697135",
+      "roomSHRUI": "MSGrQkgAz/yC8UgVG0LDcw=="
+    },
+    "hotelBooking": {
+      "voucherNo": "2781",
+      "hotelCode": "102201",
+      "checkIn": "2016-02-04T00:00:00Z",
+      "checkOut": "2016-02-05T00:00:00Z",
+      "rooms": [
+        {
+          "roomId": "05a34bd3-00f8-4c47-b395-32bca085c607",
+          "roomType": "DOUBLE LAND VIEW",
+          "board": "ROOM ONLY",
+          "buyingPrice": {
+            "amount": 21.140,
+            "currency": "EUR"
+          },
+          "sellingPrice": {
+            "amount": 34.14000,
+            "currency": "EUR"
+          },
+          "travellers": [
+            {
+              "travellerNo": "ef8ea6ee-414b-4a2b-b17e-1b14ae74ba36",
+              "type": "Adult",
+              "title": "Mr",
+              "name": "asd",
+              "surname": "asd",
+              "isLead": true,
+              "email": "asd@asd.asd",
+              "phone": "1244124124124",
+              "mobile": "1244124124124",
+              "nationality": "TR",
+              "identityDocument": {
+                "type": "TcNo",
+                "issueDate": "0001-01-01T00:00:00Z",
+                "expirationDate": "0001-01-01T00:00:00Z"
+              }
+            },
+            {
+              "travellerNo": "5d63c674-39fa-4bcc-e01b-175af1c9572c",
+              "type": "Adult",
+              "title": "Mrs",
+              "name": "asd",
+              "surname": "asd",
+              "isLead": false,
+              "nationality": "TR",
+              "identityDocument": {
+                "type": "TcNo",
+                "issueDate": "0001-01-01T00:00:00Z",
+                "expirationDate": "0001-01-01T00:00:00Z"
+              }
+            }
+          ],
+          "supplements": [],
+          "promotions": [],
+          "cancellationPolicies": [],
+          "pricePerNights": [
+            {
+              "date": "2016-02-04T00:00:00Z",
+              "buyingPrice": {
+                "amount": 34.140000000000000000000000000,
+                "currency": "EUR"
+              },
+              "sellingPrice": {
+                "amount": 34.140000000000000000000000000,
+                "currency": "EUR"
+              }
+            }
+          ]
+        }
+      ],
+      "hotelInfo": {
+        "hotelCode": "102201",
+        "hotelName": "Lara Plaza / Lara World",
+        "adress": "Güzeloba Mah. Manolya Sok. 21, Lara, Antalya",
+        "adress2": "Lara / TR",
+        "phone": " +902423493869",
+        "fax": " +902423495418",
+        "images": [
+          "http://media.dev.paximum.com/hotelimages/102201/156565a_hb_p_002.jpg",
+          "http://media.dev.paximum.com/hotelimages/102201/156565a_hb_r_002.jpg"
+        ],
+        "star": "3",
+        "website": "http://hotellaraworld.com/en/",
+        "geoCode": {
+          "latitude": "36.85167",
+          "longitude": "30.80183"
+        }
+      }
+    }
+  }
+}

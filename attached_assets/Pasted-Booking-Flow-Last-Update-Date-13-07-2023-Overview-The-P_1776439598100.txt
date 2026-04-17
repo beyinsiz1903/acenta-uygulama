@@ -1,0 +1,46 @@
+Booking Flow
+Last Update Date: 13.07.2023
+
+Overview
+The Paximum API booking flow consists of several steps depending on the OnlyBestOffers parameter configuration. The complete process involves searching for hotels, checking availability, placing orders, and managing bookings through various API endpoints. This systematic approach ensures accurate pricing and availability while providing flexibility for different business needs.
+
+Booking Process Flow
+Step 1: Hotel Search
+Search/Hotels
+Start the booking process by searching for hotels with the desired criteria.
+
+Step 2: Availability Check
+Option A: OnlyBestOffers = False
+Search/CheckAvailability
+Purpose: Responds to the latest status of the selected offer
+Use Case: When you need the specific offer
+Option B: OnlyBestOffers = True
+Search/CheckHotelAvailability
+Purpose: Responds to the latest statuses of the selected hotel's offers
+Use Case: When you need all available best offers for the related hotel
+Step 3: Place Order
+Booking/PlaceOrder
+Result: Booking confirmation with selected offer
+
+Flow Diagram
+flowchart TD
+    A[Search/Hotels] --> B{OnlyBestOffers}
+    
+    B -->|False| C[Search/CheckAvailability]
+    B -->|True| D[Search/CheckHotelAvailability]
+    
+    C --> E[Booking/PlaceOrder]
+    D --> E[Booking/PlaceOrder]
+    
+    E --> F[Booking Confirmation]
+    
+    G[OnlyBestOffers: False<br/>Get all offers for hotels<br/>Use search/checkavailability after search<br/>Responds to latest status of selected offer]
+    
+    H[OnlyBestOffers: True<br/>Get best offer per hotel<br/>Use search/checkhotelavailability after search<br/>Responds to latest statuses of selected hotel's offers]
+API Endpoints Summary
+Step	Endpoint	Condition	Purpose
+1	Search/Hotels	Always	Initial hotel search
+2a	Search/CheckAvailability	OnlyBestOffers = False	Check availability for all offers
+2b	Search/CheckHotelAvailability	OnlyBestOffers = True	Check availability for best offers only
+3	Booking/PlaceOrder	Always	Complete the booking
+Copyright © 2025 SAN Tourism Software Group. All rights reserved.

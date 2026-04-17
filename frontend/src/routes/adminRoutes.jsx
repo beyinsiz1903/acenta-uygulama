@@ -26,6 +26,7 @@ const AdminScheduledReportsPage = lazy(() => import("../pages/AdminScheduledRepo
 const AdminEFaturaPage = lazy(() => import("../pages/AdminEFaturaPage"));
 const AdminAccountingPage = lazy(() => import("../pages/AdminAccountingPage"));
 const AdminAccountingProvidersPage = lazy(() => import("../pages/AdminAccountingProvidersPage"));
+const PaximumTestPage = lazy(() => import("../pages/admin/PaximumTestPage"));
 const AdminFinanceOpsPage = lazy(() => import("../pages/AdminFinanceOpsPage"));
 const AdminSMSPage = lazy(() => import("../pages/AdminSMSPage"));
 const AdminTicketsPage = lazy(() => import("../pages/AdminTicketsPage"));
@@ -189,6 +190,7 @@ export const adminRoutes = (
     <Route path="efatura" element={<AdminEFaturaPage />} />
     <Route path="accounting" element={<AdminAccountingPage />} />
     <Route path="accounting-providers" element={<AdminAccountingProvidersPage />} />
+    <Route path="paximum-test" element={<PaximumTestPage />} />
     {/* Finance Ledger (Phase 2A + 2B) */}
     <Route path="finance/overview-v2" element={<FinanceOverviewPage />} />
     <Route path="finance/settlement-runs-v2" element={<FinanceSettlementRunsPage />} />

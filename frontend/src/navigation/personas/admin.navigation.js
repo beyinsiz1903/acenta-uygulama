@@ -380,6 +380,15 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         directAccessOnly: true,
       },
       {
+        key: "admin-paximum-test",
+        label: "Paximum Test Konsolu",
+        icon: Users,
+        to: "/app/admin/paximum-test",
+        isCore: true,
+        visibleInSidebar: true,
+        visibleInSearch: true,
+      },
+      {
         key: "admin-b2b-funnel",
         label: "B2B Funnel",
         icon: Megaphone,

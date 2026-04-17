@@ -1,0 +1,326 @@
+Hotel Search
+Last Update Date: 13.07.2023
+
+Overview
+This API is the starting point of the booking flow that searches for available hotels based on destination, dates, room requirements, and traveller details. It returns hotel offers with pricing and availability information.
+
+Request URL
+http://api.stage.paximum.com/v1/search/hotels
+Request Model
+Attribute	Type	Required	Description
+Destinations	Array (Destination)	Yes	Destination information to search
+Rooms	Array (Room)	Yes	Room information to search. Max 4 rooms
+CheckInDate	String	Yes	CheckInDate format (yyyy-MM-dd)
+CheckOutDate	String	Yes	CheckOutDate format (yyyy-MM-dd)
+Currency	String	Yes	Currency of search (2 letter ISO code)
+CustomerNationality	String	Yes	Nationality of customers (2 letter ISO code)
+FilterUnAvailable	Bool	No	If you send true you will get only available offers
+FilterDistinct	Bool	No	
+WithPromotion	Bool	No	
+IncludeHotelContent	Bool	No	If you send true you will get hotel content information
+OnlyBestOffers	Bool	No	If you send true you will get only best offer for per hotel, otherwise continue with checkAvailability
+Language	String	No	Language of search
+TimeOut	Int	No	Expected response time (second)
+IsPreSearch	Bool	No	For cache search prices, If you send true, you cannot
+Destination Object
+Attribute	Type	Required	Description
+Type	string	Yes	"city" or "hotel"
+Id	string	Yes	Id of Paximum destination or hotel
+Room Object
+Attribute	Type	Required	Description
+Adults	Int	Yes	Adult count of room.
+ChildrenAges	Array (Int)	No	Child ages if exist.
+Important Limitations
+Maximum number of hotels for a single request is 200. If you search for 1000 hotels, you can send 5 requests in parallel. No limit for parallel requests.
+Maximum number of rooms for a single request is 4.
+Maximum number of adults for a single room is 9.
+Maximum number of adults for a single request is 20.
+Maximum child age is 17.
+All required fields are mandatory.
+Request Sample
+{
+  "destinations": [{
+    "type": "hotel",
+    "id": "100122"
+  }],
+  "rooms": [{
+    "adults": 2,
+    "childrenAges": []
+  }],
+  "checkinDate": "2016-01-01",
+  "checkoutDate": "2016-01-04",
+  "currency": "EUR",
+  "customerNationality": "TR",
+  "filterUnavailable": false,
+  "withPromotion": false,
+  "IncludeHotelContent": false,
+  "language": "tr",
+  "timeout": 0,
+  "onlyBestOffers": false,
+  "isPreSearch": false
+}
+Response Model
+Attribute	Type	Description
+SearchId	String	SearchId of the response
+expiresOn	DateTime	Expiration date of response offers
+Hotels	Array (Hotel)	Collection of hotels
+Hotel Object
+Attribute	Type	Description
+Id	Int	Hotel unique identifier
+Name	String	Hotel name
+Description	String	Hotel description
+City	Object	Hotel city information
+Country	Object	Hotel country information
+Stars	Double	Hotel star rating
+Rating	Double	Hotel customer rating
+ReviewUrl	String	URL to hotel reviews
+Thumbnail	String	Hotel thumbnail image URL (https://media.dev.paximum.com/hotelimages/+thumbnail)
+Address	String	Hotel physical address
+Themes	Array (String)	Hotel themes/categories
+Facilities	Array	Hotel facilities and amenities
+Geolocation	Object	Hotel geographical coordinates
+IsFavorite	Boolean	Indicates if hotel is marked as favorite
+Offers	Array (Object)	Available offers for the hotel
+City Object
+Attribute	Type	Description
+Id	Int	City unique identifier
+Name	String	City name
+Country Object
+Attribute	Type	Description
+Id	String	Country unique identifier
+Name	String	Country name
+Geolocation Object
+Attribute	Type	Description
+Longitude	Double	Geographical longitude coordinate
+Latitude	Double	Geographical latitude coordinate
+Offer Object
+Attribute	Type	Description
+Id	String	Paximum offer ID (used for subsequent booking methods)
+ExpiresOn	DateTime	Offer expiration date and time
+HotelId	String	Associated hotel identifier
+BoardId	String	Offer board Id (meal type ID)
+Board	String	Offer board name (meal type name)
+BoardCategories	Array (String)	Board categories for the offer
+Rooms	Array (Object)	Rooms of the offer
+Price	Object	Total offer price
+IsB2CPrice	Bool	If IsB2CPrice is true, this offer cannot be sold on B2C for less than minimum sale price
+MinimumSalePrice	Object	Minimum allowed sale price
+isSpecial	Bool	Indicates if this is a special offer
+isAvailable	Bool	Availability status
+Restrictions	Array (Restriction)	Booking restrictions
+CancellationPolicies	Array (Object)	Cancellation policy details
+Room Object
+Attribute	Type	Description
+Id	String	Room unique identifier
+Type	String	Room type name
+TypeId	String	Room type identifier
+Categories	Array (String)	Room categories
+Travellers	Array (Object)	Traveller information for the room
+Price	Object	Room-specific price
+Traveller Object
+Attribute	Type	Description
+Type	String	Traveller type (Adult/Child/Infant)
+Age	Int	Traveller age
+Nationality	String	Traveller nationality
+Price Object
+Attribute	Type	Description
+Amount	Decimal	Price amount
+Currency	String	Price currency code
+MinimumSalePrice Object
+Attribute	Type	Description
+Amount	Decimal	Minimum sale price amount
+Currency	String	Price currency code
+Restriction Object
+Attribute	Type	Description
+Type	Enum	Booking restriction type
+Value	String	Restriction value/description
+Possible Restriction Types:
+
+MrCannotStay - Married couples cannot stay
+OnlyAdult - Adults only
+Construction - Construction ongoing
+MinimumNight - Minimum night stay required
+CancellationPolicy Object
+Attribute	Type	Description
+Fee	Object	Penalty fee information
+AfterDate	String	Penalty start date
+Fee Object
+Attribute	Type	Description
+Amount	Decimal	Fee amount
+Currency	String	Fee currency code
+Response Sample
+{
+  "searchId": "eb4658f0-c35a-4d2f-82ef-8af9e655d915",
+  "expiresOn": "2023-07-13T13:22:25.7394952Z",
+  "hotels": [
+    {
+      "id": "326105",
+      "name": "Bonnington Jumeirah Lakes Towers",
+      "description": "The full service hotel in Dubai is located in the heart of Jumeirah Lakes Towers along Sheikh",
+      "city": {
+        "id": "23675",
+        "name": "Dubai"
+      },
+      "country": {
+        "id": "AE",
+        "name": "United Arab Emirates"
+      },
+      "stars": 5.0,
+      "category": "Halal",
+      "rating": 5.02083,
+      "reviewUrl": "http://www.holidaycheck.com/hr/5ccd392d-344a-3885-a1f6-635e180957d3",
+      "thumbnail": "326105/f43c9556bc945761a3fee263180a34a9.jpg",
+      "address": "P.O. Box 37246 Dubai",
+      "themes": [
+        "Country House"
+      ],
+      "facilities": [
+        "Air conditioning",
+        "Lobby",
+        "24-hour reception",
+        "24-hour check-in",
+        "Hotel Safe",
+        "Currency Exchange",
+        "Cloakroom",
+        "Lifts",
+        "Café"
+      ],
+      "geolocation": {
+        "longitude": 55.14167,
+        "latitude": 25.06797
+      },
+      "isFavorite": false,
+      "offers": [
+        {
+          "id": "5cfb9734-6bec-4018-9133-9abe90a837b8",
+          "expiresOn": "2023-07-13T13:22:25.7394952Z",
+          "hotelId": "326105",
+          "boardId": "43",
+          "board": "ROOM ONLY",
+          "boardCategories": [
+            "Room only"
+          ],
+          "rooms": [
+            {
+              "id": "14debaa4-f641-4ac7-9cc6-e331c786a09b",
+              "typeId": "3718",
+              "type": "Standard Room",
+              "categories": [],
+              "promotions": [],
+              "travellers": [
+                {
+                  "type": "adult",
+                  "age": 0,
+                  "nationality": "DE"
+                },
+                {
+                  "type": "adult",
+                  "age": 0,
+                  "nationality": "DE"
+                }
+              ],
+              "price": {
+                "amount": 62.4901,
+                "currency": "EUR"
+              }
+            }
+          ],
+          "price": {
+            "amount": 62.4901,
+            "currency": "EUR"
+          },
+          "minimumSalePrice": {
+            "amount": 0.0,
+            "currency": "EUR"
+          },
+          "isB2CPrice": false,
+          "isSpecial": false,
+          "isAvailable": true,
+          "cancellationPolicies": [
+            {
+              "fee": {
+                "amount": 62.4901,
+                "currency": "EUR"
+              },
+              "afterDate": "2023-08-29T10:00:00Z"
+            }
+          ]
+        },
+        {
+          "id": "ad309449-66cf-4d71-87d4-b6ac21b96d6c",
+          "expiresOn": "2023-07-13T13:22:25.7394952Z",
+          "hotelId": "326105",
+          "boardId": "50",
+          "board": "BED AND BREAKFAST",
+          "boardCategories": [
+            "Breakfast"
+          ],
+          "rooms": [
+            {
+              "id": "f53dfde6-e503-42c8-a8b0-d8a4a1a9aad0",
+              "typeId": "3718",
+              "type": "Standard Room",
+              "categories": [],
+              "promotions": [],
+              "travellers": [
+                {
+                  "type": "adult",
+                  "age": 0,
+                  "nationality": "DE"
+                },
+                {
+                  "type": "adult",
+                  "age": 0,
+                  "nationality": "DE"
+                }
+              ],
+              "price": {
+                "amount": 69.4323,
+                "currency": "EUR"
+              }
+            }
+          ],
+          "price": {
+            "amount": 69.4323,
+            "currency": "EUR"
+          },
+          "minimumSalePrice": {
+            "amount": 0.0,
+            "currency": "EUR"
+          },
+          "isB2CPrice": false,
+          "isSpecial": false,
+          "isAvailable": true,
+          "cancellationPolicies": [
+            {
+              "fee": {
+                "amount": 69.4323,
+                "currency": "EUR"
+              },
+              "afterDate": "2023-08-29T10:00:00Z"
+            }
+          ]
+        }
+      ],
+      "ttydMember": false,
+      "badges": [
+        "exclusive",
+        "recommended",
+        "bestvalue",
+        "specialoffer"
+      ],
+      "boardIdsOfHotel": [],
+      "minimumPrice": {
+        "amount": 62.4901,
+        "currency": "EUR"
+      },
+      "maximumPrice": {
+        "amount": 336.0272,
+        "currency": "EUR"
+      }
+    }
+  ]
+}
+Note: The response sample above is truncated for brevity. The actual response contains multiple offers with different room types and board options.
+
+Copyright © 2025 SAN Tourism Software Group. All rights reserved.

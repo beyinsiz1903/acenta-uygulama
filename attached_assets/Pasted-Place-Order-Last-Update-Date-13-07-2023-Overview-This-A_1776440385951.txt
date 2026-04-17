@@ -1,0 +1,144 @@
+Place Order
+Last Update Date: 13.07.2023
+
+Overview
+This API finalizes the booking process by creating a confirmed reservation with traveller details and selected hotel offer. It's the critical step that converts a checked offer into an actual booking. The API requires complete traveller information and must be called before the offer expires to ensure successful reservation creation.
+
+Request URL
+http://api.stage.paximum.com/v1/booking/placeorder
+Request Model
+Attribute	Type	Required	Description
+Travellers	Array (Object)	Yes	Travellers of the booking
+HotelBookings	Array (Object)	Yes	Bookings
+AgencyReferenceNumber	String	Yes	Your reference number
+Important Notes:
+
+You must make a request before the offer expired
+You must send the room Id we have provided
+We can return a response in up to 2 minutes, usually under 1 minute
+Confirmed is the only expected status when placeOrder is successful
+All required fields are mandatory!
+Traveller Object
+Attribute	Type	Required	Description
+TravellerNo	String	Yes	Traveller number
+Type	String	Yes	Traveller type (Adult, Child or Infant)
+Title	String	Yes	Title (Mr, Ms, Mrs, Mss, Chd or Inf)
+Name	String	Yes	First name
+Surname	String	Yes	Surname
+BirthDate	String	Yes	Traveller age, optional for adults
+isLead	Boolean	Yes	Is lead traveller
+Email	String	No	Email address
+Phone	String	No	Phone number
+Mobile	String	No	Mobile number
+Nationality	String	Yes	Nationality code (2 letters)
+HotelBooking Object
+Attribute	Type	Required	Description
+OfferId	String	Yes	Offer ID from search response
+ReservationNote	String	No	Customer note for booking
+Rooms	Array (Object)	Yes	Room booking details
+Room Booking Object
+Attribute	Type	Required	Description
+RoomId	String	Yes	Room ID from offer
+Travellers	Array (String)	Yes	The TarvellerNO of the travellers in the room, these numbers should be defined in request travellers
+Request Sample
+{
+  "travellers": [
+    {
+      "travellerNo": "1",
+      "type": "adult",
+      "title": "Mr",
+      "name": "Name",
+      "surname": "Surname",
+      "isLead": true,
+      "email": "name.surname@paximum.com",
+      "phone": "15225215125",
+      "mobile": "15225215125",
+      "nationality": "DE"
+    },
+    {
+      "travellerNo": "2",
+      "type": "adult",
+      "title": "Mr",
+      "name": "Name",
+      "surname": "Surname",
+      "isLead": false,
+      "phone": null,
+      "mobile": null,
+      "nationality": "DE"
+    }
+  ],
+  "hotelBookings": [
+    {
+      "offerId": "12fb5389-d500-4b56-a887-3b08708d85fb",
+      "rooms": [
+        {
+          "roomId": "811a69ef-a561-4d72-a7d3-dc721ccce589",
+          "travellers": [
+            "1",
+            "2"
+          ]
+        }
+      ]
+    }
+  ],
+  "AgencyReferenceNumber": "ARN123"
+}
+Response Model
+Attribute	Type	Description
+OrderId	String	Generated order ID
+OrderNumber	String	Generated order number
+Bookings	Array (Object)	Created bookings
+Booking Object
+Attribute	Type	Description
+Id	String	Booking id, this id will be used for retrieve and cancellation
+BookingNumber	String	Booking number
+OfferId	String	Original offer ID
+DocumentUrl	String	Voucher document URL
+Price	Object	Booking selling price
+CancellationPolicies	Array (Object)	Cancellation policies
+Status	String	Booking status(Confirmed,OnRequest,Rejected,Cancelled,Pending)
+PaymentStatus	String	Payment status
+Type	String	Service type
+CheckIn	String (DateTime)	Check-in date
+CheckOut	String (DateTime)	Check-out date
+CancellationDeadline	String (DateTime)	Cancellation deadline
+Price Object
+Attribute	Type	Description
+Amount	Decimal	Price amount
+Currency	String	Currency code
+CancellationPolicy Object
+Attribute	Type	Description
+PermittedDate	String (DateTime)	Penalty start date
+Fee	Object	Penalty fee
+Response Sample
+{
+  "orderId": "826d3ab4-6ec8-4f33-b68d-c18dbd3f8465",
+  "orderNumber": "148471",
+  "bookings": [
+    {
+      "id": "58a47e23-8e35-4f3b-b7d9-be69e6315cb2",
+      "bookingNumber": "158725",
+      "offerId": "12fb5389-d500-4b56-a887-3b08708d85fb",
+      "documentUrl": "https://s3.eu-west-1.amazonaws.com/document.stage.paximum.com/Voucher/58a47e23-8e35-4f3b-b7d9-be69e6315cb2",
+      "price": {
+        "amount": 104.1433,
+        "currency": "EUR"
+      },
+      "cancellationPolicies": [
+        {
+          "permittedDate": "2023-08-29T10:00:00Z",
+          "fee": {
+            "amount": 104.1433,
+            "currency": "EUR"
+          }
+        }
+      ],
+      "status": "Confirmed",
+      "paymentStatus": "Unpaid",
+      "type": "Hotel",
+      "checkIn": "2023-09-02T00:00:00Z",
+      "checkOut": "2023-09-03T00:00:00Z",
+      "cancellationDeadline": "2023-08-29T10:00:00Z"
+    }
+  ]
+}

@@ -1,0 +1,141 @@
+Hotel Details
+Last Update Date: 13.07.2023
+
+Overview
+This API retrieves comprehensive information about a specific hotel. It's used to display detailed hotel information.
+
+Request URL
+http://api.stage.paximum.com/v1/search/hoteldetails
+Request Model
+Attribute	Type	Required	Description
+HotelId	String	Yes	This field contains the HotelId as a string.
+Request Sample
+{
+  "hotelId": "100122"
+}
+Response Model
+Attribute	Type	Description
+Id	String	Hotel id
+Name	String	Hotel name
+Description	String	Hotel Description
+City	Object	Hotel city
+Country	Object	Hotel country
+Stars	Double	Hotel star (category)
+Rating	Double	Hotel rating
+ReviewUrl	String	Review url
+Photos	Array (String)	Hotel images
+Themes	Array (String)	Hotel themes
+Facilities	Array	Hotel facilities
+Content	Array (Object)	Hotel content
+Address	Object	Hotel address
+City Object
+Attribute	Type	Description
+Id	String	City id
+Name	String	City name
+Country Object
+Attribute	Type	Description
+Id	String	Country id
+Name	String	Country name
+Content Object
+Attribute	Type	Description
+Title	String	Content title
+Description	String	Content description
+Address Object
+Attribute	Type	Description
+AddressLines	Array (String)	Address lines
+Street	String	Street name
+StreetNumber	String	Street number
+CityName	String	City name
+CountryCode	String	Country code
+Phones	Array (Object)	Phone numbers
+Mail	String	Hotel email address
+HomePage	String	Hotel website
+Geolocation	Object	Geographic coordinates
+Phone Object
+Attribute	Type	Description
+PhoneNumber	String	Phone number
+isDefault	Boolean	Is default phone
+Type	String	Phone type (voice or fax)
+Geolocation Object
+Attribute	Type	Description
+Longitude	Double	Longitude coordinate
+Latitude	Double	Latitude coordinate
+Response Sample
+{
+  "id": "100122",
+  "name": "Limak Lara De Luxe Hotel & Resort",
+  "description": "This club resort is situated approximately 8 km from the centre of Lara and is close to the sea and",
+  "city": {
+    "id": "23504",
+    "name": "Lara"
+  },
+  "country": {
+    "id": "TR",
+    "name": "Turkey"
+  },
+  "stars": 4.5,
+  "rating": 5.5977,
+  "reviewUrl": "http://www.holidaycheck.com/hr/4d1251f4-2a50-3064-8551-3a7c277b7e2a",
+  "photos": [
+    "100122/385896.jpg",
+    "100122/385899.jpg"
+  ],
+  "themes": ["Club Resort"],
+  "facilities": [],
+  "content": [
+    {
+      "title": "Location",
+      "description": "This club resort is situated approximately 8 km from the centre of Lara and is close to the sea"
+    },
+    {
+      "title": "Facilities",
+      "description": "The hotel consists of 448 rooms with 1238 beds, including 323 standard rooms, 4 rooms suitable for"
+    },
+    {
+      "title": "Rooms",
+      "description": "Each room features a direct dial telephone and an en suite bathroom with a WC, shower, hairdryer"
+    },
+    {
+      "title": "Sports/Entertainment",
+      "description": "Guests may take part in an aerobics or aqua fit session. They can also go canoeing or pedal boat"
+    },
+    {
+      "title": "Meals",
+      "description": "Buffets are served for breakfast, lunch and dinner, and set menu and à la carte options are also"
+    },
+    {
+      "title": "Payment",
+      "description": "MasterCard and VISA are accepted as methods of payment."
+    }
+  ],
+  "address": {
+    "addressLines": [
+      "Kemerağzı Mevkii P.K. 34",
+      "Lara",
+      "Antalya"
+    ],
+    "street": "Kemerağzı Mevkii",
+    "streetNumber": "34",
+    "cityName": "Lara",
+    "countryCode": "TR",
+    "phones": [
+      {
+        "phoneNumber": "+902423522700",
+        "isDefault": false,
+        "type": "voice"
+      },
+      {
+        "phoneNumber": "+902423522690",
+        "isDefault": false,
+        "type": "fax"
+      }
+    ],
+    "mail": "lara@limakhotels.com",
+    "homePage": "http://www.limakhotels.com/lara/en/contact.html",
+    "geolocation": {
+      "longitude": 30.88086,
+      "latitude": 36.85587
+    }
+  }
+}
+Copyright © 2025 SAN Tourism Software Group. All rights reserved

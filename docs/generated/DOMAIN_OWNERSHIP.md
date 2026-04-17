@@ -1,5 +1,5 @@
 # Domain Ownership Map
-> Auto-generated: 2026-04-17 14:54 UTC
+> Auto-generated: 2026-04-17 15:43 UTC
 > Source: `app/modules/*/` structure and `__init__.py` imports
 
 | Domain | Router Count | Has Dedicated Routers Dir | Docstring |
@@ -11,7 +11,7 @@
 | **enterprise** | 9 | Yes | Yes |
 | **finance** | 35 | Yes | Yes |
 | **identity** | 21 | Yes | Yes |
-| **inventory** | 28 | Yes | Yes |
+| **inventory** | 29 | Yes | Yes |
 | **mobile** | 0 | No | Yes |
 | **operations** | 15 | Yes | Yes |
 | **pricing** | 12 | Yes | Yes |
@@ -21,7 +21,7 @@
 | **system** | 55 | Yes | Yes |
 | **tenant** | 0 | No | Yes |
 
-**Total**: 260 routers across 16 domains
+**Total**: 261 routers across 16 domains
 
 ## Domain Descriptions
 

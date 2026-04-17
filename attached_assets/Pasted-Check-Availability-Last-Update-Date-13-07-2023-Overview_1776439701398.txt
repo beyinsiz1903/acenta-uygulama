@@ -1,0 +1,177 @@
+Check Availability
+Last Update Date: 13.07.2023
+
+Overview
+This API validates and retrieves the latest information for a specific hotel offer before booking. It confirms room availability, and provides up-to-date cancellation policies. Use this when OnlyBestOffers is set to false in your hotel search.
+
+Request URL
+http://api.stage.paximum.com/v1/search/checkavailability
+Request Model
+Attribute	Type	Required	Description
+OfferId	String	Yes	Selected offer id from search response
+Important Note:
+
+The information in this response is the latest information of the offer.
+The board and roomTypes should be shown to the customer.
+DailyPrices only for information, your buying price is offer price.
+Cancellation policy penalty date is UTC date and time is important, do not ignore it when calculating.
+All required fields are mandatory!
+Request Sample
+{
+  "offerId": "12fb5389-d500-4b56-a887-3b08708d85fb"
+}
+Response Model
+Attribute	Type	Description
+ExpiresOn	String (DateTime)	Expiration date and time of the offer
+SearchId	String	Search ID
+CheckinDate	String (DateTime)	Check-in date
+CheckoutDate	String (DateTime)	Check-out date
+HotelId	String	Hotel ID
+Id	String	Offer ID
+BoardId	String	Board ID (mealTypeId)
+Board	String	Offer board name (mealTypeName)
+BoardCategories	Array (String)	Board categories of the offer
+Rooms	Array (Object)	Room informations
+Price	Object	Offer price
+PriceBreakdown	Array (Object)	Daily prices
+CancellationPolicies	Array (Object)	Cancel penalty informations
+Supplements	Array (Object)	Supplement
+isSpecial	Boolean	Special offer status
+isB2CPrice	Boolean	If IsB2CPrice is true, this offer cannot be sold on B2C for less than minimum sale price
+MinimumSalePrice	Object	Minimum sale price
+isAvailable	Boolean	Offer availability status (Onrequest or available)
+Notes	Array (String)	Imported notes about the offer
+Restrictions	Array (Object)	Offer restrictions
+Warnings	Array (String)	Offer warnings (PriceChanged, BoardChanged etc.)
+Room Object
+Attribute	Type	Description
+id	String	Room ID
+TypeId	String	Room type ID
+Type	String	Room type name
+Promotions	Array (Object)	Room promotions
+Travellers	Array (Object)	Room Travellers Informations
+Price	Object	Room price
+Traveller Object
+Attribute	Type	Description
+Type	String	Traveller type (adult,child or infant)
+Age	Int	Age
+Nationality	String	Nationality code
+Price Object
+Attribute	Type	Description
+Amount	Decimal	Price amount
+Currency	String	Currency code
+PriceBreakdown Object
+Attribute	Type	Description
+RoomId	String	Room ID
+Date	String (DateTime)	Date
+Price	Object	Price for the date
+CancellationPolicy Object
+Attribute	Type	Description
+Fee	Object	Cancellation fee
+AfterDate	String (DateTime)	Penalty applies after this date
+Fee Object
+Attribute	Type	Description
+Amount	Decimal	Fee amount
+Currency	String	Fee currency
+Supplement Object
+Attribute	Type	Description
+Name	String	Name
+PaidAtHotel	Bool	This will always be true
+Price	Object	Total price of the supplement, This price will be paid at the hotel.
+MinimumSalePrice Object
+Attribute	Type	Description
+Amount	Decimal	Price amount
+Currency	String	Price currency
+Restriction Object
+Attribute	Type	Description
+Type	Enum	Booking restriction types, Possible values (MrCannotStay, OnlyAdult, Construction, MinimumNight)
+Value	String	Value
+Response Sample
+{
+  "expiresOn": "2023-07-13T13:22:25.7394952Z",
+  "searchId": "eb4658f0-c35a-4d2f-82ef-8af9e655d915",
+  "checkinDate": "2023-09-02T00:00:00Z",
+  "checkoutDate": "2023-09-03T00:00:00Z",
+  "hotelId": "326105",
+  "id": "12fb5389-d500-4b56-a887-3b08708d85fb",
+  "boardId": "50",
+  "boardCategories": [
+    "Breakfast"
+  ],
+  "board": "BED AND BREAKFAST",
+  "rooms": [
+    {
+      "id": "811a69ef-a561-4d72-a7d3-dc721ccce589",
+      "typeId": "3626",
+      "type": "1 King Deluxe Corner Single Sofa Bed",
+      "categories": [],
+      "promotions": [],
+      "travellers": [
+        {
+          "type": "adult",
+          "age": 0,
+          "nationality": "DE"
+        },
+        {
+          "type": "adult",
+          "age": 0,
+          "nationality": "DE"
+        }
+      ],
+      "price": {
+        "amount": 104.1433,
+        "currency": "EUR"
+      }
+    }
+  ],
+  "price": {
+    "amount": 104.1433,
+    "currency": "EUR"
+  },
+  "isB2CPrice": false,
+  "minimumSalePrice": {
+    "amount": 0.0,
+    "currency": "EUR"
+  },
+  "priceBreakdown": [
+    {
+      "roomId": "811a69ef-a561-4d72-a7d3-dc721ccce589",
+      "date": "2023-09-02T00:00:00Z",
+      "price": {
+        "amount": 104.1433,
+        "currency": "EUR"
+      }
+    }
+  ],
+  "cancellationPolicies": [
+    {
+      "fee": {
+        "amount": 104.1433,
+        "currency": "EUR"
+      },
+      "afterDate": "2023-08-29T10:00:00Z"
+    }
+  ],
+  "supplements": [],
+  "isSpecial": false,
+  "isAvailable": true,
+  "notes": [
+    "This rate is not applicable to United Arab Emirates market/country or passport holders otherwise the reservation",
+    "Conditions:",
+    "1. If you have any active booking or cancelled and rebook with new price hotel will not confirm the last booking",
+    "2. Late Check-in. Some hotels do not have 24 hour reception service. If you are going to arrive to property after",
+    "3. Requests. Bedding types for Double/Twin rooms, Specific room types cannot be guaranteed and are subject to availability",
+    "4. Hotel surcharges. Resort fees, city taxes or any other surcharges due to the country regulations must be paid",
+    "5. Early check in & Late Check out. Hotels in general check the guests in to property after 02:00 pm and Check",
+    "Supplier original board:BED AND BREAKFAST",
+    "Supplier original room(s): 1 King Deluxe Corner Single Sofa Bed"
+  ],
+  "restrictions": [
+    {
+      "type": "MrCannotStay"
+    }
+  ],
+  "isOwnProvider": false,
+  "warnings": []
+}
+Copyright © 2025 SAN Tourism Software Group. All rights reserved

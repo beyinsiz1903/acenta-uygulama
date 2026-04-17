@@ -1,0 +1,154 @@
+Check Hotel Availability
+Last Update Date: 13.07.2023
+
+Overview
+This API retrieves all available offers for a specific hotel with updated pricing and availability information. Unlike CheckAvailability which validates a single offer, this endpoint returns multiple offers for the same hotel. Use this when OnlyBestOffers is set to true in your hotel search to get comprehensive options for a selected property.
+
+Request URL
+http://api.stage.paximum.com/v1/search/checkhotelavailability
+Request Model
+Attribute	Type	Required	Description
+OfferId	String	Yes	Selected offer id from search response
+Important Notes:
+
+The information in this response is the latest information of the offer
+The board and roomTypes should be shown to the customer
+DailyPrices only for information, your buying price is offer price
+Cancellation policy penalty date is UTC date and time is important, do not ignore it when calculating
+Request Sample
+{
+  "offerId": "206d0428-48fe-4f23-ac85-e5bc8953c10a"
+}
+Response Model
+Attribute	Type	Description
+SearchId	String	SearchId of the response
+expiresOn	DateTime	Expiration date of response offers
+CheckInDate	String	CheckInDate format (yyyy-MM-dd)
+CheckOutDate	String	CheckOutDate format (yyyy-MM-dd)
+HotelId	String	Hotel Id
+Offers	Array (Object)	Offers of the response
+Offer Object
+Attribute	Type	Description
+Rooms	Array (Object)	Offer rooms
+Id	String	Offer id
+Board	String	Board name (meal type name)
+Price	Object	Offer price
+PriceBreakDown	Array (Object)	Daily prices
+CancellationPolicies	Array (Object)	Cancel penalty informations
+Supplements	Array (Object)	Supplement
+IsSpecial	Bool	Special offer status
+IsB2CPrice	Bool	If IsB2CPrice is true, this offer cannot be sold on B2C for less than minimum sale price
+MinimumSalePrice	Object	Minimum sale price
+IsAvailable	Bool	Offer availability status (Onrequest or available)
+Notes	Array (String)	Imported notes about the offer
+Restrictions	Array (Restriction)	Offer restrictions
+Warnings	Array (String)	Offer warnings (PriceChanged, BoardChanged etc.)
+Room Object
+Attribute	Type	Description
+Id	String	Room id
+Type	String	Room type name
+Promotions	Array	Room promotions
+Travellers	Array (Object)	Room travellers
+Traveller Object
+Attribute	Type	Description
+Type	String	Traveller type (Adult, Child or Infant)
+Age	Int	Traveller age
+Nationality	String	Traveller nationality
+Price Object
+Attribute	Type	Description
+Amount	Decimal	Price amount
+Currency	String	Price currency
+PriceBreakDown Object
+Attribute	Type	Description
+RoomId	String	Room id
+Date	String	Date
+Price	Object	Daily price
+CancellationPolicy Object
+Attribute	Type	Description
+Fee	Object	Penalty fee
+AfterDate	String	Penalty start date
+Fee Object
+Attribute	Type	Description
+Amount	Decimal	Fee amount
+Currency	String	Fee currency
+Supplement Object
+Attribute	Type	Description
+Name	String	Name
+PaidAtHotel	Bool	This will always be true
+Price	Object	Total price of the supplement, This price will be paid at the hotel.
+MinimumSalePrice Object
+Attribute	Type	Description
+Amount	Decimal	Price amount
+Currency	String	Price currency
+Restriction Object
+Attribute	Type	Description
+Type	Enum	Booking restriction types, Possible values (MrCannotStay, OnlyAdult, Construction, MinimumNight)
+Value	String	Value
+Response Sample
+{
+  "expiresOn": "2023-01-24T07:59:55.9126514Z",
+  "searchId": "ca959673-0504-4626-b4d9-35d9a424c434",
+  "checkinDate": "2023-01-27T00:00:00Z",
+  "checkoutDate": "2023-01-28T00:00:00Z",
+  "hotelId": "103132",
+  "offers": [
+    {
+      "rooms": [
+        {
+          "id": "4059da97-9128-4e8a-8bad-3ad4b17aadb5",
+          "type": "IQSP.e9c84bae-e2aa-4cab-957f-70ab3ac2f376:Deluxe Room, Jetted Tub - 1 double and 1 twin bed",
+          "promotions": [],
+          "travellers": [
+            {
+              "type": "adult",
+              "age": 0,
+              "nationality": "TR"
+            },
+            {
+              "type": "adult",
+              "age": 0,
+              "nationality": "TR"
+            }
+          ]
+        }
+      ],
+      "id": "206d0428-48fe-4f23-ac85-e5bc8953c10a",
+      "board": "All Inclusive",
+      "price": {
+        "amount": 140.0,
+        "currency": "EUR"
+      },
+      "priceBreakdown": [
+        {
+          "roomId": "4059da97-9128-4e8a-8bad-3ad4b17aadb5",
+          "date": "2015-11-26T00:00:00Z",
+          "price": {
+            "amount": 140.0,
+            "currency": "EUR"
+          }
+        }
+      ],
+      "cancellationPolicies": [
+        {
+          "fee": {
+            "amount": 140.0,
+            "currency": "EUR"
+          },
+          "afterDate": "2015-11-25T00:00:00Z"
+        }
+      ],
+      "supplements": [],
+      "isSpecial": false,
+      "isB2CPrice": false,
+      "minimumSalePrice": {
+        "amount": 0.0,
+        "currency": "EUR"
+      },
+      "isAvailable": true,
+      "notes": [],
+      "warnings": []
+    }
+  ],
+  "totalOfferCount": 20
+}
+Copyright © 2025 SAN Tourism Software Group. All rights reserv

@@ -1,0 +1,103 @@
+Get Bookings
+Last Update Date: 13.07.2023
+
+Overview
+This API retrieves a list of bookings based on various filter criteria such as creation dates, check-in dates, or reference numbers. It's essential for tracking multiple reservations, generating reports, and providing customer service. You can filter by date ranges or retrieve all bookings for your account.
+
+Request URL
+http://api.stage.paximum.com/v1/booking/getbookings
+Request Model
+Attribute	Type	Required	Description
+From	DateTime	No	Booking creation from date
+To	DateTime	No	Booking creation to date
+CheckInFrom	DateTime	No	Booking checkin from date
+CheckInTo	DateTime	No	Booking checkin to date
+AgencyReferenceNumber	String	No	Your reference number
+GetAllBookingsOfUserAccount	Bool	No	Send true for get all bookings of user account
+Request Samples
+{
+  "from": "2023-07-13",
+  "to": "2023-07-14",
+  "GetAllBookingsOfUserAccount": true
+}
+{
+  "checkinfrom": "2016-10-01",
+  "checkinto": "2016-11-08",
+  "GetAllBookingsOfUserAccount": false
+}
+{
+  "agencyReferenceNumber": "d546d4fdsf6"
+}
+Response Model
+Attribute	Type	Description
+Bookings	Array (Object)	Requested bookings
+Booking Object
+Attribute	Type	Description
+bookingId	String	Booking ID
+creation	String (DateTime)	Booking creation date
+checkin	String (DateTime)	Check-in date
+checkout	String (DateTime)	Check-out date
+amount	Object	Booking amount
+status	String	Booking status
+notes	Array (String)	Booking notes
+orderNumber	String	Order number
+bookingNumber	String	Booking number
+hotelId	String	Hotel ID
+boardCategories	Array (String)	Board categories
+cancellationPolicies	Array (Object)	Cancellation policies
+nationality	String	Guest nationality
+Amount Object
+Attribute	Type	Description
+Amount	Decimal	Amount value
+Currency	String	Currency code
+CancellationPolicy Object
+Attribute	Type	Description
+PermittedDate	String (DateTime)	Permitted cancellation date
+FeeType	String	Fee type
+Fee	Object	Cancellation fee
+Fee Object
+Attribute	Type	Description
+Amount	Decimal	Cancellation fee amount
+Currency	String	Currency code
+Response Sample
+{
+  "bookings": [
+    {
+      "bookingId": "58a47e23-8e35-4f3b-b7d9-be69e6315cb2",
+      "creation": "2023-07-13T13:05:08.971Z",
+      "checkin": "2023-09-02T00:00:00Z",
+      "checkout": "2023-09-03T00:00:00Z",
+      "amount": {
+        "amount": 104.1433,
+        "currency": "EUR"
+      },
+      "status": "Confirmed",
+      "notes": [
+        "This rate is not applicable to United Arab Emirates market/country or passport holders otherwise the reservation",
+        "Conditions:",
+        "1. If you have any active booking or cancelled and rebook with new price hotel will not confirm the last booking",
+        "2. Late Check-in. Some hotels do not have 24 hour reception service. If you are going to arrive to property",
+        "3. Requests. Bedding types for Double/Twin rooms, Specific room types cannot be guaranteed and are subject to availability",
+        "4. Hotel surcharges. Resort fees, city taxes or any other surcharges due to the country regulations must be paid",
+        "5. Early check in & Late Check out. Hotels in general check the guests in to property after 02:00 pm and Check"
+      ],
+      "orderNumber": "148471",
+      "bookingNumber": "158725",
+      "hotelId": "326105",
+      "boardCategories": [
+        "Breakfast"
+      ],
+      "cancellationPolicies": [
+        {
+          "permittedDate": "2023-08-29T10:00:00Z",
+          "feeType": "Amount",
+          "fee": {
+            "amount": 104.1433,
+            "currency": "EUR"
+          }
+        }
+      ],
+      "nationality": "DE"
+    }
+  ]
+}

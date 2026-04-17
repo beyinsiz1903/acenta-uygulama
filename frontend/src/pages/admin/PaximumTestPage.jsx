@@ -134,6 +134,145 @@ export default function PaximumTestPage() {
 
   const configured = health.data?.configured;
 
+  // ───────── Certification scenarios ─────────
+  const [certCheckin, setCertCheckin] = useState(todayPlus(45));
+  const [certCheckout, setCertCheckout] = useState(todayPlus(48));
+  const [certResults, setCertResults] = useState({});
+  const [certBusy, setCertBusy] = useState({});
+
+  const SCENARIOS = [
+    { id: 1, hotelId: "326105", hotelName: "Bonnington Jumeirah Lakes Towers", desc: "1 oda · 2 yetişkin",
+      rooms: [{ adults: 2, childrenAges: [] }] },
+    { id: 2, hotelId: "325772", hotelName: "Grand Hyatt Dubai", desc: "1 oda · 2 yetişkin + 2 çocuk (5,7)",
+      rooms: [{ adults: 2, childrenAges: [5, 7] }] },
+    { id: 3, hotelId: "325776", hotelName: "Shangri-La Dubai", desc: "2 oda · [2 ad] + [2 ad + 2 çocuk (5,7)]",
+      rooms: [{ adults: 2, childrenAges: [] }, { adults: 2, childrenAges: [5, 7] }] },
+    { id: 4, hotelId: "326105", hotelName: "Bonnington JLT", desc: "3 oda · [3] + [2] + [1]",
+      rooms: [{ adults: 3, childrenAges: [] }, { adults: 2, childrenAges: [] }, { adults: 1, childrenAges: [] }] },
+    { id: 5, hotelId: "326105", hotelName: "Bonnington JLT", desc: "4 oda · 9 yetişkin (3+2+2+2)",
+      rooms: [{ adults: 3, childrenAges: [] }, { adults: 2, childrenAges: [] }, { adults: 2, childrenAges: [] }, { adults: 2, childrenAges: [] }] },
+  ];
+
+  const buildTravellers = (rooms) => {
+    const out = [];
+    let n = 1;
+    rooms.forEach((room, ri) => {
+      for (let i = 0; i < room.adults; i++) {
+        out.push({
+          no: String(n), type: "adult", title: i % 2 === 0 ? "Mr" : "Mrs",
+          name: `Test${n}`, surname: "User",
+          isLead: ri === 0 && i === 0,
+          roomIndex: ri,
+        });
+        n += 1;
+      }
+      (room.childrenAges || []).forEach((age) => {
+        const d = new Date();
+        d.setFullYear(d.getFullYear() - age);
+        out.push({
+          no: String(n), type: "child", title: "Chd",
+          name: `Child${n}`, surname: "User",
+          birthDate: d.toISOString().slice(0, 10),
+          roomIndex: ri,
+        });
+        n += 1;
+      });
+    });
+    return out;
+  };
+
+  const fmtPrice = (p) => p && p.amount != null ? `${Number(p.amount).toFixed(2)} ${p.currency || ""}` : "-";
+
+  const fmtCancellation = (offer) => {
+    const list = offer?.cancellationPolicies || offer?.cancellationPolicy || offer?.cancellation || [];
+    if (Array.isArray(list) && list.length) {
+      return list.map((p) => {
+        const due = p.dueDate || p.date || p.startDate || "";
+        const amt = p.amount?.amount ?? p.fee ?? p.price?.amount ?? "";
+        const cur = p.amount?.currency || p.price?.currency || "";
+        return `${due}: ${amt} ${cur}`.trim();
+      }).join(" | ");
+    }
+    if (typeof list === "string") return list;
+    return "Sağlanmadı";
+  };
+
+  const runCertScenario = async (sc) => {
+    setCertBusy((b) => ({ ...b, [sc.id]: true }));
+    setCertResults((r) => ({ ...r, [sc.id]: { status: "running" } }));
+    try {
+      const sRes = await api.post("/paximum/search/hotels", {
+        destinations: [{ type: "hotel", id: sc.hotelId }],
+        rooms: sc.rooms,
+        checkinDate: certCheckin,
+        checkoutDate: certCheckout,
+        currency: "EUR",
+        customerNationality: "DE",
+        language: "en",
+        onlyBestOffers: false,
+        includeHotelContent: false,
+        filterUnavailable: true,
+      }).then((r) => r.data);
+      const hotel = (sRes.hotels || [])[0];
+      if (!hotel) throw new Error("Aramada otel bulunamadı");
+      const offer = (hotel.offers || [])[0];
+      if (!offer) throw new Error("Otelde teklif yok");
+
+      let freshOffer = offer;
+      try {
+        const aRes = await api.post("/paximum/search/checkavailability", { offerId: offer.id }).then((r) => r.data);
+        freshOffer = aRes.offer || (aRes.offers && aRes.offers[0]) || offer;
+      } catch (_) { /* keep original */ }
+
+      const offerId = freshOffer.id || offer.id;
+      const offerRooms = freshOffer.rooms || offer.rooms || [];
+      const travellers = buildTravellers(sc.rooms);
+      const apiTravellers = travellers.map((t) => ({
+        travellerNo: t.no, type: t.type, title: t.title,
+        name: t.name, surname: t.surname,
+        isLead: !!t.isLead, nationality: "DE",
+        ...(t.birthDate ? { birthDate: t.birthDate } : {}),
+      }));
+      const hotelBookingRooms = sc.rooms.map((_, ri) => {
+        const offerRoom = offerRooms[ri] || {};
+        const roomId = offerRoom.id || offerRoom.roomId || String(ri + 1);
+        return {
+          roomId: String(roomId),
+          travellers: travellers.filter((t) => t.roomIndex === ri).map((t) => t.no),
+        };
+      });
+      const ref = `CERT-${sc.id}-${Date.now().toString().slice(-8)}`;
+      const oRes = await api.post("/paximum/booking/placeorder", {
+        travellers: apiTravellers,
+        hotelBookings: [{ offerId, rooms: hotelBookingRooms }],
+        agencyReferenceNumber: ref,
+      }).then((r) => r.data);
+
+      const roomNames = offerRooms.map((r) => r.name || r.roomName || r.roomType).filter(Boolean).join(" + ")
+        || offer.roomName || "-";
+
+      setCertResults((r) => ({
+        ...r,
+        [sc.id]: {
+          status: "ok",
+          bookingNo: oRes.bookingNumber || oRes.bookingId || oRes.reservationNumber || JSON.stringify(oRes).slice(0, 80),
+          checkin: certCheckin,
+          checkout: certCheckout,
+          roomType: roomNames,
+          boardType: freshOffer.board || offer.board || "-",
+          price: fmtPrice(freshOffer.price || offer.price),
+          cancellationPolicy: fmtCancellation(freshOffer),
+          agencyRef: ref,
+          raw: oRes,
+        },
+      }));
+    } catch (e) {
+      setCertResults((r) => ({ ...r, [sc.id]: { status: "error", message: apiErrorMessage(e) } }));
+    } finally {
+      setCertBusy((b) => ({ ...b, [sc.id]: false }));
+    }
+  };
+
   return (
     <div style={{ padding: 24, maxWidth: 1100, margin: "0 auto" }}>
       <h2 style={{ margin: "0 0 16px", color: "#0f172a" }}>Paximum (San TSG) Test Konsolu</h2>
@@ -341,8 +480,74 @@ export default function PaximumTestPage() {
         {bookingResult && <div style={{ marginTop: 12 }}><Code value={bookingResult} /></div>}
       </Section>
 
+      <Section
+        title="4. Sertifikasyon Senaryoları (Paximum Certification Document)"
+        right={
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <Field label="Check-in" w={140}>
+              <input type="date" value={certCheckin} onChange={(e) => setCertCheckin(e.target.value)} style={inputStyle} />
+            </Field>
+            <Field label="Check-out" w={140}>
+              <input type="date" value={certCheckout} onChange={(e) => setCertCheckout(e.target.value)} style={inputStyle} />
+            </Field>
+          </div>
+        }
+      >
+        <div style={{ fontSize: 12, color: "#64748b", marginBottom: 10 }}>
+          Her senaryoda search → checkAvailability → placeOrder zinciri otomatik koşar. Nationality: DE.
+          Lütfen Paximum'un talimatına göre <b>oluşan rezervasyonları iptal etmeyin</b>.
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {SCENARIOS.map((sc) => {
+            const res = certResults[sc.id];
+            const busy = !!certBusy[sc.id];
+            return (
+              <div key={sc.id} style={{ border: "1px solid #e2e8f0", borderRadius: 8, padding: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                  <div>
+                    <div style={{ fontWeight: 600, color: "#0f172a" }}>
+                      Senaryo {sc.id}: {sc.hotelName} <span style={{ color: "#64748b", fontWeight: 400 }}>({sc.hotelId})</span>
+                    </div>
+                    <div style={{ fontSize: 12, color: "#475569", marginTop: 2 }}>{sc.desc}</div>
+                  </div>
+                  <Button onClick={() => runCertScenario(sc)} disabled={busy || !configured}>
+                    {busy ? "Çalışıyor..." : res?.status === "ok" ? "Tekrar Çalıştır" : "Çalıştır"}
+                  </Button>
+                </div>
+
+                {res?.status === "running" && (
+                  <div style={{ marginTop: 10, fontSize: 12, color: "#475569" }}>Search → CheckAvail → PlaceOrder yürütülüyor...</div>
+                )}
+                {res?.status === "error" && (
+                  <div style={{ marginTop: 10, color: "#991b1b", fontSize: 13 }}>Hata: {res.message}</div>
+                )}
+                {res?.status === "ok" && (
+                  <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "140px 1fr", rowGap: 4, columnGap: 12, fontSize: 13 }}>
+                    <div style={{ color: "#64748b" }}>Booking No</div>
+                    <div style={{ fontWeight: 600 }}>{res.bookingNo}</div>
+                    <div style={{ color: "#64748b" }}>Check-in</div><div>{res.checkin}</div>
+                    <div style={{ color: "#64748b" }}>Check-out</div><div>{res.checkout}</div>
+                    <div style={{ color: "#64748b" }}>Room Type</div><div>{res.roomType}</div>
+                    <div style={{ color: "#64748b" }}>Board Type</div><div>{res.boardType}</div>
+                    <div style={{ color: "#64748b" }}>Price</div><div>{res.price}</div>
+                    <div style={{ color: "#64748b" }}>Cancellation Policy</div><div style={{ fontSize: 12 }}>{res.cancellationPolicy}</div>
+                    <div style={{ color: "#64748b" }}>Agency Ref</div><div style={{ fontSize: 12 }}>{res.agencyRef}</div>
+                    <div style={{ gridColumn: "1 / -1", marginTop: 6 }}>
+                      <details>
+                        <summary style={{ cursor: "pointer", fontSize: 12, color: "#64748b" }}>Ham yanıt</summary>
+                        <Code value={res.raw} />
+                      </details>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </Section>
+
       <div style={{ fontSize: 12, color: "#64748b", marginTop: 8 }}>
-        Place Order (rezervasyon oluşturma) bu konsolda manuel form yerine doğrudan UI üzerinden ilerleyecek bir sonraki fazda eklenecek.
+        Sonraki faz: rezervasyonların yerel <code>agency_reservations</code> koleksiyonuna kaydedilmesi (Syroce Marketplace ile aynı desen).
       </div>
     </div>
   );

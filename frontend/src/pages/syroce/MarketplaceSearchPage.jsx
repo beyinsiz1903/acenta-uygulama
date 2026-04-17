@@ -1,9 +1,10 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiErrorMessage } from "../../lib/api";
 import {
   Search, Hotel, Star, Calendar, Users, MapPin, X, Loader2,
-  CheckCircle2, AlertTriangle,
+  CheckCircle2, AlertTriangle, FileText,
 } from "lucide-react";
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -65,6 +66,7 @@ function Banner({ kind, children, onClose }) {
 
 export default function MarketplaceSearchPage() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [form, setForm] = useState(emptySearch);
   const [results, setResults] = useState(null);
   const [error, setError] = useState("");
@@ -162,8 +164,17 @@ export default function MarketplaceSearchPage() {
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Hotel className="text-blue-600" /> Otel Ara
           </h1>
-          <p className="text-sm text-gray-500">Syroce PMS Marketplace üzerinden müsaitlik sorgula ve rezerve et.</p>
+          <p className="text-sm text-gray-500">
+            Yalnızca onaylı sözleşmeniz olan oteller listelenir. Yeni bir otelle çalışmak için önce sözleşme teklif edin.
+          </p>
         </div>
+        <button
+          type="button"
+          onClick={() => navigate("/app/admin/syroce-marketplace/contracts?propose=1")}
+          className="inline-flex items-center gap-2 border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-2 rounded text-sm"
+        >
+          <FileText size={16} /> Yeni Otelle Sözleşme Teklif Et
+        </button>
       </div>
 
       {/* Search form */}
@@ -218,8 +229,20 @@ export default function MarketplaceSearchPage() {
             Toplam <b>{results.total_hotels ?? results.results?.length ?? 0}</b> otel bulundu.
           </div>
           {(results.results || []).length === 0 && (
-            <div className="bg-white border rounded p-6 text-center text-gray-500 text-sm">
-              Bu kriterlere uygun müsait oda bulunamadı.
+            <div className="bg-white border rounded p-6 text-center text-sm space-y-3">
+              <div className="text-gray-500">
+                Bu kriterlere uygun müsait oda bulunamadı.
+              </div>
+              <div className="text-xs text-gray-500">
+                Aradığınız otelle henüz sözleşmeniz yoksa, sözleşme teklif edin — otelci onayladığında burada görünür.
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate("/app/admin/syroce-marketplace/contracts?propose=1")}
+                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm"
+              >
+                <FileText size={16} /> Sözleşme Teklif Et
+              </button>
             </div>
           )}
           {(results.results || []).map((hotel) => (

@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   FileText, Plus, Trash2, Loader2, AlertTriangle, CheckCircle2, X, Clock, Ban, RefreshCw,
@@ -292,12 +293,33 @@ function ProposeDialog({ open, onClose, onSubmit, submitting, error, prefillTena
 
 export default function MarketplaceContractsPage() {
   const qc = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useState("active");
   const [proposeOpen, setProposeOpen] = useState(false);
   const [proposeError, setProposeError] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [withdrawingId, setWithdrawingId] = useState(null);
+  const [prefill, setPrefill] = useState({ tenant_id: "", hotel_name: "" });
+
+  // URL params: ?propose=1&tenant_id=...&hotel_name=...
+  useEffect(() => {
+    if (searchParams.get("propose") === "1") {
+      setPrefill({
+        tenant_id: searchParams.get("tenant_id") || "",
+        hotel_name: searchParams.get("hotel_name") || "",
+      });
+      setProposeError("");
+      setProposeOpen(true);
+      // Clear URL params so dialog doesn't reopen on refetch / back nav
+      const next = new URLSearchParams(searchParams);
+      next.delete("propose");
+      next.delete("tenant_id");
+      next.delete("hotel_name");
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["marketplace-contracts"],
@@ -408,10 +430,12 @@ export default function MarketplaceContractsPage() {
 
       <ProposeDialog
         open={proposeOpen}
-        onClose={() => setProposeOpen(false)}
+        onClose={() => { setProposeOpen(false); setPrefill({ tenant_id: "", hotel_name: "" }); }}
         onSubmit={(p) => proposeMut.mutate(p)}
         submitting={proposeMut.isPending}
         error={proposeError}
+        prefillTenantId={prefill.tenant_id}
+        prefillHotelName={prefill.hotel_name}
       />
     </div>
   );

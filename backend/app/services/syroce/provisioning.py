@@ -189,7 +189,10 @@ async def provision_agency(
         # Re-raise so callers (admin endpoint) get a 4xx; the auto-hook should swallow.
         raise
 
-    syroce_agency_id = result.get("agency_id")
+    # Syroce PMS returns: {"agency": {"id": "...", ...}, "api_key": "...", "key_prefix": "...", "warning": "..."}
+    # Tolerate both nested and flat shapes for forward-compat.
+    agency_obj = result.get("agency") if isinstance(result.get("agency"), dict) else {}
+    syroce_agency_id = agency_obj.get("id") or result.get("agency_id") or result.get("id")
     raw_api_key = result.get("api_key")
     if not syroce_agency_id or not raw_api_key:
         raise SyroceError(502, "Syroce admin API beklenen alanları döndürmedi (agency_id / api_key).")

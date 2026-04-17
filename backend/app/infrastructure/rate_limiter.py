@@ -99,6 +99,7 @@ RATE_TIERS = {
     "public_checkout":   {"capacity": 10,  "refill_rate": 0.033},   # 10 per 5 min
     "export":            {"capacity": 5,   "refill_rate": 0.0083},  # 5 per 10 min
     "supplier_api":      {"capacity": 60,  "refill_rate": 1.0},     # 60 per min
+    "syroce_search":     {"capacity": 10,  "refill_rate": 10.0},    # 10 per second per agency
 }
 
 

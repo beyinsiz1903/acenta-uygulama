@@ -1,10 +1,18 @@
-"""Syroce PMS Marketplace v1 — proxy router + yerel rezervasyon kaydı.
+"""Syroce PMS Marketplace v1 — per-organization PROXY router.
 
-Frontend bu router'a istek atar; router PMS Marketplace API'sine HTTP isteği yapar
-ve gerektiğinde sonucu yerel `syroce_marketplace_bookings` koleksiyonuna kaydeder.
+Each request is scoped by `current_user.organization_id`. The actual Syroce
+API key for that org is loaded from the encrypted `syroce_agencies` collection.
+No platform-wide key is used here — that's only for admin operations.
+
+Includes:
+  - Local persistence of reservations in `agency_reservations` (org-scoped, idempotent).
+  - Per-org rate-limit on /search.
+  - CSV export on /reconciliation.
 """
 from __future__ import annotations
 
+import csv
+import io
 import logging
 import re
 import uuid
@@ -12,16 +20,17 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, Query
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, EmailStr, Field
+from pymongo.errors import DuplicateKeyError
 
 from app.auth import require_roles
 from app.db import get_db
 from app.errors import AppError
+from app.infrastructure.rate_limiter import check_rate_limit
 from app.security.module_guard import require_org_module
-from pymongo.errors import DuplicateKeyError
-
-from app.services import syroce_marketplace as svc
-from app.services.syroce_marketplace import SyroceMarketplaceError
+from app.services.syroce.agent import SyroceAgentClient
+from app.services.syroce.errors import SyroceError
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +43,7 @@ router = APIRouter(
 UserDep = Depends(require_roles(["super_admin", "admin", "agent", "operator"]))
 
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-COLLECTION = "syroce_marketplace_bookings"
+COLLECTION = "agency_reservations"
 
 
 # ───────────────────── Helpers ─────────────────────
@@ -50,7 +59,7 @@ def _org_id(user: dict) -> str:
     return str(org)
 
 
-def _to_app_error(exc: SyroceMarketplaceError) -> AppError:
+def _to_app_error(exc: SyroceError) -> AppError:
     return AppError(
         status_code=exc.http_status if 400 <= exc.http_status < 600 else 502,
         code="syroce_marketplace_error",
@@ -68,51 +77,50 @@ def _validate_date(value: str, field: str) -> None:
         )
 
 
-async def _audit(
-    db,
-    org_id: str,
-    user: dict,
-    action: str,
-    target_id: str,
-    meta: Optional[dict] = None,
-) -> None:
+async def _audit(db, org_id, user, action, target_id, meta=None):
     try:
-        await db.audit_logs.insert_one(
-            {
-                "id": str(uuid.uuid4()),
-                "organization_id": org_id,
-                "user_id": user.get("id") or user.get("sub"),
-                "user_email": user.get("email"),
-                "action": action,
-                "module": "syroce_marketplace",
-                "target_id": target_id,
-                "metadata": meta or {},
-                "created_at": _now(),
-            }
-        )
+        await db.audit_logs.insert_one({
+            "id": str(uuid.uuid4()),
+            "organization_id": org_id,
+            "user_id": user.get("id") or user.get("sub"),
+            "user_email": user.get("email"),
+            "action": action,
+            "module": "syroce_marketplace",
+            "target_id": target_id,
+            "metadata": meta or {},
+            "created_at": _now(),
+        })
     except Exception as e:
         logger.warning("syroce marketplace audit write failed: %s", e)
 
 
 async def _ensure_indexes(db) -> None:
-    """external_reference uniqueness per organization."""
     try:
         await db[COLLECTION].create_index(
             [("organization_id", 1), ("external_reference", 1)],
-            unique=True,
-            name="uniq_org_external_reference",
+            unique=True, name="uniq_org_external_reference",
         )
         await db[COLLECTION].create_index(
-            [("organization_id", 1), ("created_at", -1)],
-            name="org_created_at",
+            [("organization_id", 1), ("created_at", -1)], name="org_created_at",
+        )
+        await db[COLLECTION].create_index(
+            "syroce_reservation_id", unique=True, sparse=True, name="uniq_syroce_reservation_id",
         )
     except Exception as e:
-        logger.debug("syroce marketplace index ensure: %s", e)
+        logger.debug("agency_reservations index ensure: %s", e)
 
 
-def _serialize_booking(doc: Dict[str, Any]) -> Dict[str, Any]:
+def _serialize(doc: Dict[str, Any]) -> Dict[str, Any]:
     doc.pop("_id", None)
     return doc
+
+
+async def _client(user: dict) -> SyroceAgentClient:
+    """Get an org-scoped Syroce client. Maps SyroceError → AppError."""
+    try:
+        return await SyroceAgentClient.from_organization_id(_org_id(user))
+    except SyroceError as exc:
+        raise _to_app_error(exc)
 
 
 # ───────────────────── Pydantic models ─────────────────────
@@ -141,8 +149,7 @@ class CreateReservationPayload(BaseModel):
     children: int = Field(0, ge=0, le=20)
     external_reference: Optional[str] = None
     special_requests: Optional[str] = None
-    total_amount: Optional[float] = None
-    hotel_name: Optional[str] = None  # UI'dan gelir, yerel kayıt için
+    hotel_name: Optional[str] = None  # local snapshot only — total_amount sent NEVER
 
 
 class CancelPayload(BaseModel):
@@ -158,9 +165,10 @@ async def listings(
     q: Optional[str] = None,
     user: dict = UserDep,
 ):
+    client = await _client(user)
     try:
-        return await svc.list_hotels(city=city, country=country, q=q)
-    except SyroceMarketplaceError as exc:
+        return await client.list_hotels(city=city, country=country, q=q)
+    except SyroceError as exc:
         raise _to_app_error(exc)
 
 
@@ -172,14 +180,22 @@ async def search(
     _validate_date(payload.check_in, "check_in")
     _validate_date(payload.check_out, "check_out")
     if payload.check_out <= payload.check_in:
+        raise AppError(422, "invalid_date_range", "check_out tarihi check_in tarihinden büyük olmalı.")
+
+    org_id = _org_id(user)
+    rl = await check_rate_limit(key=org_id, tier="syroce_search")
+    if not rl.allowed:
         raise AppError(
-            status_code=422,
-            code="invalid_date_range",
-            message="check_out tarihi check_in tarihinden büyük olmalı.",
+            status_code=429,
+            code="rate_limited",
+            message=f"Çok hızlı arama yapıyorsunuz. Lütfen {max(1, rl.retry_after_ms // 1000)} saniye sonra tekrar deneyin.",
+            details={"retry_after_ms": rl.retry_after_ms},
         )
+
+    client = await _client(user)
     try:
-        return await svc.search_availability(payload.model_dump(exclude_none=True))
-    except SyroceMarketplaceError as exc:
+        return await client.search_availability(payload.model_dump(exclude_none=True))
+    except SyroceError as exc:
         raise _to_app_error(exc)
 
 
@@ -193,44 +209,29 @@ async def rates(
 ):
     _validate_date(check_in, "check_in")
     _validate_date(check_out, "check_out")
+    client = await _client(user)
     try:
-        return await svc.get_rates(
-            tenant_id=tenant_id,
-            room_type=room_type,
-            check_in=check_in,
-            check_out=check_out,
+        return await client.get_rates(
+            tenant_id=tenant_id, room_type=room_type, check_in=check_in, check_out=check_out,
         )
-    except SyroceMarketplaceError as exc:
+    except SyroceError as exc:
         raise _to_app_error(exc)
 
 
 @router.post("/reservations")
-async def create_reservation(
-    body: CreateReservationPayload,
-    user: dict = UserDep,
-):
+async def create_reservation(body: CreateReservationPayload, user: dict = UserDep):
     _validate_date(body.check_in, "check_in")
     _validate_date(body.check_out, "check_out")
     if body.check_out <= body.check_in:
-        raise AppError(
-            status_code=422,
-            code="invalid_date_range",
-            message="check_out tarihi check_in tarihinden büyük olmalı.",
-        )
+        raise AppError(422, "invalid_date_range", "check_out tarihi check_in tarihinden büyük olmalı.")
 
     db = await get_db()
     await _ensure_indexes(db)
     org_id = _org_id(user)
 
-    # Generate external_reference if missing
-    external_ref = (body.external_reference or "").strip()
-    if not external_ref:
-        external_ref = f"ACT-{uuid.uuid4().hex[:8].upper()}"
+    external_ref = (body.external_reference or "").strip() or f"ACT-{uuid.uuid4().hex[:8].upper()}"
 
-    # ─── Idempotency: insert a "pending" record FIRST.
-    # Compound unique index (organization_id, external_reference) ensures only
-    # one concurrent caller can claim this reference. The other will get
-    # DuplicateKeyError → 409 — without a duplicate PMS call.
+    # Idempotency: claim the (org, external_reference) slot BEFORE PMS call.
     record_id = str(uuid.uuid4())
     pending_doc = {
         "id": record_id,
@@ -253,7 +254,6 @@ async def create_reservation(
         "created_at": _now(),
         "updated_at": _now(),
     }
-
     try:
         await db[COLLECTION].insert_one(pending_doc)
     except DuplicateKeyError:
@@ -261,16 +261,10 @@ async def create_reservation(
             {"organization_id": org_id, "external_reference": external_ref}
         )
         if existing and existing.get("status") in ("confirmed", "completed"):
-            # True idempotency: return the prior successful record.
-            return {
-                "ok": True,
-                "reservation": _serialize_booking(existing),
-                "idempotent": True,
-            }
+            return {"ok": True, "reservation": _serialize(existing), "idempotent": True}
         raise AppError(
-            status_code=409,
-            code="duplicate_external_reference",
-            message=f"Bu PNR ({external_ref}) için zaten bir işlem devam ediyor veya tamamlandı.",
+            409, "duplicate_external_reference",
+            f"Bu PNR ({external_ref}) için zaten bir işlem devam ediyor veya tamamlandı.",
         )
 
     pms_payload: Dict[str, Any] = {
@@ -287,24 +281,21 @@ async def create_reservation(
     }
     if body.special_requests:
         pms_payload["special_requests"] = body.special_requests
-    if body.total_amount is not None:
-        pms_payload["total_amount"] = body.total_amount
+    # NOTE: total_amount intentionally NOT sent — server-side price is authoritative.
 
+    client = await _client(user)
     try:
-        result = await svc.create_reservation(pms_payload)
-    except SyroceMarketplaceError as exc:
-        # Mark record as failed so the same external_reference can be retried
-        # (we delete so the user can fix and resubmit cleanly).
+        result = await client.create_reservation(pms_payload)
+    except SyroceError as exc:
         try:
             await db[COLLECTION].delete_one(
                 {"organization_id": org_id, "id": record_id, "status": "pending"}
             )
         except Exception:
-            logger.exception("failed to clean up pending marketplace record")
+            logger.exception("failed to clean up pending agency_reservation record")
         raise _to_app_error(exc)
 
     reservation = (result or {}).get("reservation") or {}
-
     update = {
         "syroce_reservation_id": reservation.get("id"),
         "syroce_confirmation_code": reservation.get("confirmation_code"),
@@ -320,23 +311,16 @@ async def create_reservation(
         "raw_response": result,
         "updated_at": _now(),
     }
-
     try:
         await db[COLLECTION].update_one(
-            {"organization_id": org_id, "id": record_id},
-            {"$set": update},
+            {"organization_id": org_id, "id": record_id}, {"$set": update}
         )
     except Exception as e:
-        # Very rare: PMS booked but local update failed. Surface this so the
-        # user/operator knows a reconciliation is required.
-        logger.error("syroce marketplace local update failed after PMS success: %s", e)
+        logger.error("agency_reservations local update failed after PMS success: %s", e)
         raise AppError(
-            status_code=500,
-            code="local_persistence_failed",
-            message=(
-                f"Rezervasyon PMS'te oluşturuldu (kod: {update.get('syroce_confirmation_code')}) "
-                "ancak yerel kayıt güncellenemedi. Lütfen mutabakat sayfasından kontrol edin."
-            ),
+            500, "local_persistence_failed",
+            f"Rezervasyon PMS'te oluşturuldu (kod: {update.get('syroce_confirmation_code')}) "
+            "ancak yerel kayıt güncellenemedi. Lütfen mutabakat sayfasından kontrol edin.",
             details={
                 "syroce_confirmation_code": update.get("syroce_confirmation_code"),
                 "syroce_reservation_id": update.get("syroce_reservation_id"),
@@ -345,21 +329,12 @@ async def create_reservation(
         )
 
     final_doc = {**pending_doc, **update}
-
-    await _audit(
-        db,
-        org_id,
-        user,
-        "marketplace_reservation_created",
-        record_id,
-        {
-            "external_reference": external_ref,
-            "syroce_reservation_id": update.get("syroce_reservation_id"),
-            "syroce_confirmation_code": update.get("syroce_confirmation_code"),
-        },
-    )
-
-    return {"ok": True, "reservation": _serialize_booking(final_doc), "raw": result}
+    await _audit(db, org_id, user, "marketplace_reservation_created", record_id, {
+        "external_reference": external_ref,
+        "syroce_reservation_id": update.get("syroce_reservation_id"),
+        "syroce_confirmation_code": update.get("syroce_confirmation_code"),
+    })
+    return {"ok": True, "reservation": _serialize(final_doc), "raw": result}
 
 
 @router.get("/reservations")
@@ -374,48 +349,29 @@ async def list_reservations(
     q: Dict[str, Any] = {"organization_id": org_id}
     if status:
         q["status"] = status
-
     total = await db[COLLECTION].count_documents(q)
-    cursor = (
-        db[COLLECTION]
-        .find(q)
-        .sort("created_at", -1)
-        .skip((page - 1) * page_size)
-        .limit(page_size)
-    )
-    items: List[Dict[str, Any]] = []
-    async for d in cursor:
-        items.append(_serialize_booking(d))
+    cursor = db[COLLECTION].find(q).sort("created_at", -1).skip((page - 1) * page_size).limit(page_size)
+    items: List[Dict[str, Any]] = [_serialize(d) async for d in cursor]
     return {"items": items, "total": total, "page": page, "page_size": page_size}
 
 
 @router.get("/reservations/{reservation_id}")
-async def get_reservation_detail(
-    reservation_id: str,
-    user: dict = UserDep,
-):
+async def get_reservation_detail(reservation_id: str, user: dict = UserDep):
     db = await get_db()
     org_id = _org_id(user)
-    local = await db[COLLECTION].find_one(
-        {"organization_id": org_id, "id": reservation_id}
-    )
+    local = await db[COLLECTION].find_one({"organization_id": org_id, "id": reservation_id})
     if not local:
-        raise AppError(
-            status_code=404,
-            code="not_found",
-            message="Rezervasyon bulunamadı.",
-        )
-
+        raise AppError(404, "not_found", "Rezervasyon bulunamadı.")
     pms_id = local.get("syroce_reservation_id")
     pms_data: Dict[str, Any] = {}
     if pms_id:
         try:
-            pms_data = await svc.get_reservation(str(pms_id))
-        except SyroceMarketplaceError as exc:
+            client = await _client(user)
+            pms_data = await client.get_reservation(str(pms_id))
+        except SyroceError as exc:
             logger.warning("PMS reservation fetch failed: %s", exc)
             pms_data = {"error": exc.detail}
-
-    return {"local": _serialize_booking(local), "pms": pms_data}
+    return {"local": _serialize(local), "pms": pms_data}
 
 
 @router.delete("/reservations/{reservation_id}")
@@ -426,56 +382,35 @@ async def cancel_local_reservation(
 ):
     db = await get_db()
     org_id = _org_id(user)
-    local = await db[COLLECTION].find_one(
-        {"organization_id": org_id, "id": reservation_id}
-    )
+    local = await db[COLLECTION].find_one({"organization_id": org_id, "id": reservation_id})
     if not local:
-        raise AppError(
-            status_code=404,
-            code="not_found",
-            message="Rezervasyon bulunamadı.",
-        )
+        raise AppError(404, "not_found", "Rezervasyon bulunamadı.")
     if local.get("status") == "cancelled":
-        raise AppError(
-            status_code=409,
-            code="already_cancelled",
-            message="Bu rezervasyon zaten iptal edilmiş.",
-        )
-
+        raise AppError(409, "already_cancelled", "Bu rezervasyon zaten iptal edilmiş.")
     pms_id = local.get("syroce_reservation_id")
     if not pms_id:
-        raise AppError(
-            status_code=409,
-            code="missing_pms_id",
-            message="Bu kayıt PMS'te tanımlı değil; iptal edilemez.",
-        )
+        raise AppError(409, "missing_pms_id", "Bu kayıt PMS'te tanımlı değil; iptal edilemez.")
 
     reason = (body.reason if body else "agency_request") or "agency_request"
+    client = await _client(user)
     try:
-        result = await svc.cancel_reservation(str(pms_id), reason=reason)
-    except SyroceMarketplaceError as exc:
+        result = await client.cancel_reservation(str(pms_id), reason=reason)
+    except SyroceError as exc:
         raise _to_app_error(exc)
 
     await db[COLLECTION].update_one(
         {"organization_id": org_id, "id": reservation_id},
-        {
-            "$set": {
-                "status": "cancelled",
-                "cancelled_at": _now(),
-                "cancel_reason": reason,
-                "updated_at": _now(),
-                "raw_cancel_response": result,
-            }
-        },
+        {"$set": {
+            "status": "cancelled",
+            "cancelled_at": _now(),
+            "cancellation_reason": reason,
+            "updated_at": _now(),
+            "raw_cancel_response": result,
+        }},
     )
-    await _audit(
-        db,
-        org_id,
-        user,
-        "marketplace_reservation_cancelled",
-        reservation_id,
-        {"reason": reason, "syroce_reservation_id": pms_id},
-    )
+    await _audit(db, org_id, user, "marketplace_reservation_cancelled", reservation_id, {
+        "reason": reason, "syroce_reservation_id": pms_id,
+    })
     return {"ok": True, "result": result}
 
 
@@ -484,21 +419,44 @@ async def reconciliation(
     period_start: str = Query(...),
     period_end: str = Query(...),
     tenant_id: Optional[str] = None,
+    format: str = Query("json", pattern="^(json|csv)$"),
     user: dict = UserDep,
 ):
     _validate_date(period_start, "period_start")
     _validate_date(period_end, "period_end")
     if period_end < period_start:
-        raise AppError(
-            status_code=422,
-            code="invalid_date_range",
-            message="period_end, period_start'tan büyük veya eşit olmalı.",
-        )
+        raise AppError(422, "invalid_date_range", "period_end, period_start'tan büyük veya eşit olmalı.")
+
+    client = await _client(user)
     try:
-        return await svc.reconciliation_agency(
-            period_start=period_start,
-            period_end=period_end,
-            tenant_id=tenant_id,
+        data = await client.reconciliation(
+            period_start=period_start, period_end=period_end, tenant_id=tenant_id,
         )
-    except SyroceMarketplaceError as exc:
+    except SyroceError as exc:
         raise _to_app_error(exc)
+
+    if format == "csv":
+        rows = data.get("rows") or data.get("hotels") or data.get("items") or []
+        buf = io.StringIO()
+        writer = csv.writer(buf)
+        writer.writerow([
+            "Otel", "Tenant ID", "Rezervasyon", "Toplam Ciro", "Komisyon", "Net Ödenmesi",
+        ])
+        for r in rows:
+            writer.writerow([
+                r.get("hotel_name") or "",
+                r.get("tenant_id") or "",
+                r.get("reservations_count") or r.get("bookings_count") or 0,
+                r.get("total_revenue") or r.get("gross_total") or 0,
+                r.get("commission_total") or r.get("agency_commission") or 0,
+                r.get("net_to_hotel") or r.get("net_total") or 0,
+            ])
+        buf.seek(0)
+        filename = f"mutabakat_{period_start}_{period_end}.csv"
+        return StreamingResponse(
+            iter([buf.getvalue()]),
+            media_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+
+    return data

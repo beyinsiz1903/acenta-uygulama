@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { api, apiErrorMessage } from "../../lib/api";
-import { Calculator, Loader2, AlertTriangle, X } from "lucide-react";
+import { Calculator, Loader2, AlertTriangle, X, Download } from "lucide-react";
 
 const firstOfMonth = () => {
   const d = new Date();
@@ -26,6 +26,29 @@ export default function MarketplaceReconciliationPage() {
       setData(null);
       setError(apiErrorMessage(err) || "Mutabakat alınamadı.");
     },
+  });
+
+  const csvMut = useMutation({
+    mutationFn: async () => {
+      const p = new URLSearchParams({
+        period_start: period.start,
+        period_end: period.end,
+        format: "csv",
+      });
+      if (period.tenant_id) p.set("tenant_id", period.tenant_id);
+      const resp = await api.get(`/syroce-marketplace/reconciliation?${p}`, { responseType: "blob" });
+      const blob = new Blob([resp.data], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `mutabakat_${period.start}_${period.end}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      return true;
+    },
+    onError: (err) => setError(apiErrorMessage(err) || "CSV indirilemedi."),
   });
 
   const rows = data?.rows || data?.hotels || data?.items || [];
@@ -57,11 +80,16 @@ export default function MarketplaceReconciliationPage() {
           <input className="w-full border rounded px-3 py-2 text-sm font-mono text-xs" value={period.tenant_id}
             onChange={(e) => setPeriod((s) => ({ ...s, tenant_id: e.target.value }))} />
         </div>
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
           <button type="submit" disabled={mut.isPending}
             className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white px-4 py-2 rounded text-sm">
             {mut.isPending ? <Loader2 size={16} className="animate-spin" /> : null}
             Mutabakatı Getir
+          </button>
+          <button type="button" onClick={() => csvMut.mutate()} disabled={csvMut.isPending}
+            className="inline-flex items-center gap-2 bg-white border hover:bg-gray-50 disabled:opacity-60 px-4 py-2 rounded text-sm">
+            {csvMut.isPending ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+            CSV İndir
           </button>
         </div>
       </form>

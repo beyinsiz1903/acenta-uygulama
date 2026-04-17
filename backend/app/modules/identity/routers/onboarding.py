@@ -101,6 +101,20 @@ async def signup(payload: SignupRequest, request: Request):
         "trial_end": result["trial_end"],
     })
 
+    # Best-effort: provision Syroce marketplace agency. Fire-and-forget so the
+    # signup response is NEVER delayed by the external PMS call.
+    try:
+        import asyncio as _asyncio
+        from app.services.syroce import provisioning as _syroce_prov
+        _asyncio.create_task(_syroce_prov.best_effort_provision(
+            db,
+            organization_id=result["org_id"],
+            name=payload.company_name,
+            contact_email=payload.email,
+        ))
+    except Exception:  # pragma: no cover — defensive
+        pass
+
     return {
         "access_token": token,
         "token_type": "bearer",

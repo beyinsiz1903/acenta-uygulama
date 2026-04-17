@@ -2,6 +2,7 @@
 from fastapi import APIRouter
 
 from app.modules.identity.routers.admin_agencies import router as admin_agencies_router
+from app.modules.identity.routers.admin_syroce_agencies import router as admin_syroce_agencies_router
 from app.modules.identity.routers.admin_agency_users import router as admin_agency_users_router
 from app.modules.identity.routers.admin_agency_users import all_users_router as admin_all_users_router
 from app.modules.identity.routers.admin_api_keys import router as admin_api_keys_router
@@ -25,6 +26,7 @@ from app.modules.identity.routers.org_modules import router as org_modules_route
 domain_router = APIRouter()
 domain_router.include_router(org_modules_router)
 domain_router.include_router(admin_agencies_router)
+domain_router.include_router(admin_syroce_agencies_router)
 domain_router.include_router(admin_agency_users_router)
 domain_router.include_router(admin_all_users_router)
 domain_router.include_router(admin_api_keys_router)

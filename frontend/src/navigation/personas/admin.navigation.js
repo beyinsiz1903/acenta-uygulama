@@ -738,6 +738,15 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         visibleInSearch: true,
         moduleKey: "syroce_marketplace",
       },
+      {
+        key: "syroce-marketplace-connection",
+        label: "Bağlantı & API Anahtarı",
+        icon: Settings,
+        to: "/app/admin/syroce-marketplace/connection",
+        visibleInSidebar: true,
+        visibleInSearch: true,
+        moduleKey: "syroce_marketplace",
+      },
     ],
   },
 

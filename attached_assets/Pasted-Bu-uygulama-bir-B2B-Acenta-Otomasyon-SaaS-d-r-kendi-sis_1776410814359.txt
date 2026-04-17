@@ -1,0 +1,144 @@
+Bu uygulama bir B2B Acenta Otomasyon SaaS'ıdır — kendi sistemimize üye olan
+acentaların (tenant) Syroce PMS Marketplace üzerinden otellerle bağlantı kurup
+arama/rezervasyon yapmasını sağlayacağız. Aşağıdaki entegrasyonu ekle.
+
+## 0) Mimari Karar
+- Bizim SaaS'ımız Syroce PMS karşısında bir "platform/aggregator" rolündedir.
+- Bizim sistemimizdeki HER acenta üyeliği için, Syroce PMS'te otomatik olarak
+  bir marketplace acentesi açacağız ve dönen API key'i bizim DB'mizde ŞİFRELİ
+  olarak saklayacağız. Acenta kullanıcısı bu key'i hiç görmeyecek; tüm Syroce
+  istekleri bizim backend'imiz üzerinden proxy'lenecek.
+- Bizim backend'imiz Syroce'a istek atarken, ilgili acentanın saklı key'ini
+  X-API-Key header'ında kullanır.
+
+## 1) Secrets (sadece SaaS backend'inde)
+- SYROCE_BASE_URL                 → https://<pms-domain>/api/marketplace/v1
+- SYROCE_MARKETPLACE_ADMIN_TOKEN  → PMS yöneticisinden alınan master admin token
+                                    (X-Marketplace-Admin-Token header'ı)
+- SYROCE_KEY_ENCRYPTION_KEY       → bizim DB'mizdeki acenta key'lerini şifrelemek
+                                    için fernet/AES-256 anahtarı (32 byte base64)
+
+Hiçbir Syroce key'i log'a yazılmamalı, response'ta frontend'e dönmemeli.
+
+## 2) Veri Modeli
+"agencies" tablosuna ekle (yoksa oluştur):
+- id, name, contact_email, contact_phone, country, default_commission_pct
+- syroce_agency_id            (PMS'teki agency_id — UNIQUE)
+- syroce_api_key_encrypted    (fernet ile şifreli ham key)
+- syroce_status               ("active" | "disabled")
+- syroce_created_at, syroce_last_synced_at
+
+"agency_reservations" tablosu:
+- id, agency_id (FK→agencies)
+- syroce_reservation_id (UNIQUE), syroce_confirmation_code
+- syroce_tenant_id, hotel_name
+- guest_name, guest_email, guest_phone
+- check_in, check_out, room_type, room_number
+- total_amount, commission_rate, commission_amount, net_to_hotel
+- external_reference (bizim PNR — UNIQUE per agency)
+- status, raw_response (JSONB)
+- created_at, cancelled_at, cancellation_reason
+
+## 3) Backend Servisleri
+`services/syroce/admin.{js|ts|py}` — sadece backend'in kullandığı admin client:
+
+  createSyroceAgency({ name, contact_email, contact_phone, country,
+                       default_commission_pct })
+    → POST /admin/agencies
+       headers: X-Marketplace-Admin-Token: <ADMIN_TOKEN>
+    → response: { agency_id, api_key (RAW — sadece bu yanıtta gelir!),
+                  warning, ... }
+    → key'i fernet ile şifreleyip DB'ye yaz, RAW key'i HİÇBİR YERE LOGLAMA.
+
+  regenerateSyroceKey(syroce_agency_id)
+    → POST /admin/agencies/{id}/api-keys/regenerate
+    → eski key iptal olur; yeni RAW key'i şifreleyip güncelle.
+
+  disableSyroceAgency(syroce_agency_id)
+    → DELETE /admin/agencies/{id}
+
+`services/syroce/agent.{js|ts|py}` — acenta-bağlamlı client:
+  Constructor: agency_id alır, DB'den şifreli key'i çözer, X-API-Key header'ına
+  koyarak çağrı yapar.
+
+  - listHotels(filters)              → GET  /listings
+  - searchAvailability(payload)      → POST /search
+  - getRates(...)                    → GET  /rates
+  - createReservation(payload)       → POST /reservations
+       NOT: total_amount GÖNDERME (server hesabını kabul et, ±0.50 TRY
+       toleransla doğrulama yapıyorlar; göndermek yerine search'ten dönen
+       total_price'ı UI'da müşteriye göster).
+       external_reference olarak bizim PNR'ımızı (örn: ACT-{nanoid8}) ver.
+  - getReservation(id)               → GET  /reservations/{id}
+  - cancelReservation(id, reason)    → DELETE /reservations/{id}?reason=...
+  - reconciliation(period_start, period_end)
+                                     → GET  /reconciliation/agency
+
+Tüm hatalarda response.detail mesajını üstüne aktar (Türkçe geliyor).
+
+## 4) Otomatik Üyelik Akışı (KRİTİK)
+Mevcut "Acenta Kayıt" / "Acenta Onaylama" iş akışına bir "post-signup" hook ekle:
+
+  async function onAgencySignupApproved(agency) {
+    // 1) Syroce'da karşılık oluştur
+    const { agency_id: syroce_agency_id, api_key } =
+        await admin.createSyroceAgency({
+           name: agency.name,
+           contact_email: agency.email,
+           contact_phone: agency.phone,
+           country: agency.country,
+           default_commission_pct: agency.default_commission_pct ?? 10,
+        });
+    // 2) Şifreleyip kaydet
+    await db.agencies.update(agency.id, {
+        syroce_agency_id,
+        syroce_api_key_encrypted: encryptKey(api_key),
+        syroce_status: "active",
+        syroce_created_at: new Date(),
+    });
+    // 3) Acentaya e-posta: "Otellere bağlantınız hazır"
+  }
+
+İdempotency: Eğer agency.syroce_agency_id zaten doluysa createSyroceAgency
+ÇAĞRILMAZ — duplicate kayıt olmasın.
+Hata olursa kullanıcı kaydı geri alınmasın; admin panele "Syroce sync failed"
+flag'i düşür, retry butonu sun.
+
+Admin panele şu butonlar eklensin:
+  - "Syroce'da Yeniden Senkronize Et" (createSyroceAgency yoksa, varsa skip)
+  - "API Key'i Yenile" (regenerate)
+  - "Syroce Bağlantısını Kapat" (disable)
+
+## 5) UI (acenta kullanıcısı için)
+Mevcut acenta dashboard'una "Otel Pazaryeri" menüsü altında:
+
+  a) Otel Ara → form (şehir, giriş, çıkış, yetişkin, çocuk, oda tipi?, max
+     fiyat?) → POST /search proxy → otel kartları, her oda için "Müşteri
+     Fiyatı = total_price" ve "Sizin Maliyetiniz = agency_payable" + komisyon
+     rozeti + "Rezerve Et" butonu.
+  b) Rezervasyon Oluştur modal → misafir bilgileri + bizim oto-üretilmiş
+     external_reference → POST /reservations proxy → başarılı olursa
+     agency_reservations'a yaz, "MKT-XXXXXXXX" toast.
+  c) Rezervasyonlarım → liste + detay + "İptal Et" (sebep modalı).
+  d) Mutabakat → tarih aralığı → /reconciliation/agency proxy → otel bazlı
+     ciro/komisyon/net tablo + CSV export.
+
+## 6) Güvenlik / İzolasyon
+- Bütün proxy endpoint'leri "current_user.agency_id" üzerinden çalışsın;
+  başka acentanın rezervasyonunu görmek/iptal etmek imkânsız olmalı.
+- agency_reservations.external_reference UNIQUE per agency_id.
+- Şifreli key'ler asla API yanıtında dönmesin; sadece /admin/agencies/{id}
+  detayında "key_set: true/false" boolean'ı gösterilsin.
+- Rate limit: acenta başına saniyede 10 search çağrısı (basit token bucket).
+
+## 7) Test Senaryoları
+1. Yeni acenta kaydı onayla → DB'de syroce_agency_id ve syroce_api_key_encrypted
+   doldu mu?
+2. O acenta olarak login ol → Otel Ara → arama sonuç dönüyor mu?
+3. Rezervasyon oluştur → confirmation_code kaydedildi mi?
+4. Aynı external_reference ile ikinci kez deneme → reddedilmeli.
+5. Rezervasyonu iptal et → Syroce'da da iptal mi? Reconciliation'da
+   "cancelled" sayacı arttı mı?
+6. Admin panelden "API Key Yenile" → eski key ile yapılan istek 401 mi?
+
+İşin bittiğinde dosya ağacı + manuel test çıktılarını özetle.

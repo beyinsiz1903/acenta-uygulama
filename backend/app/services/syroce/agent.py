@@ -127,7 +127,7 @@ class SyroceAgentClient:
         if city: params["city"] = city
         if country: params["country"] = country
         if q: params["q"] = q
-        return await self._request("GET", "/listings", params=params or None)
+        return await self._request("GET", "/hotels", params=params or None)
 
     async def search_availability(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         return await self._request("POST", "/search", json_body=payload)

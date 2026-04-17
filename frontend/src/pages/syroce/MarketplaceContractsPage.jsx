@@ -318,8 +318,7 @@ export default function MarketplaceContractsPage() {
       next.delete("hotel_name");
       setSearchParams(next, { replace: true });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searchParams, setSearchParams]);
 
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["marketplace-contracts"],

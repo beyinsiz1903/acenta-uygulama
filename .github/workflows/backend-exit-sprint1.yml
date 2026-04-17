@@ -6,6 +6,11 @@ on:
   push:
     branches: [main, "release/*"]
 
+env:
+  # Opt into Node 24 runtime for JS-based actions to silence the Node 20
+  # deprecation warning until checkout/setup-python ship native v5/v6 builds.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   ci_test_exit_sprint1:
     name: ci:test:exit-sprint1

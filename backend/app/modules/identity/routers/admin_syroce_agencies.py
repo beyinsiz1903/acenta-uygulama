@@ -75,7 +75,13 @@ async def resync(
     # Pull defaults from existing org/agency record if not provided
     org_doc = await db.organizations.find_one({"id": org_id}) or {}
     name = body.name or org_doc.get("name") or org_doc.get("company_name") or org_id
-    email = body.contact_email or org_doc.get("contact_email") or org_doc.get("admin_email") or ""
+    email = (
+        body.contact_email
+        or org_doc.get("contact_email")
+        or org_doc.get("admin_email")
+        or (user.get("email") if isinstance(user, dict) else getattr(user, "email", None))
+        or ""
+    )
     if not email:
         raise AppError(422, "missing_email", "contact_email zorunlu (organizasyon kaydında bulunamadı).")
     try:

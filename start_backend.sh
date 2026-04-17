@@ -16,5 +16,8 @@ else
 fi
 
 echo "Starting FastAPI backend on port 8000..."
+# Cookies must be SameSite=None;Secure for cross-site iframe (Replit preview proxy).
+export AUTH_COOKIE_SAMESITE="${AUTH_COOKIE_SAMESITE:-none}"
+export AUTH_COOKIE_SECURE="${AUTH_COOKIE_SECURE:-true}"
 cd backend
 exec uvicorn server:app --host localhost --port 8000

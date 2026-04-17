@@ -37,6 +37,7 @@ from app.modules.inventory.routers.admin_catalog import router as admin_catalog_
 from app.modules.inventory.routers.admin_tours import router as admin_tours_router
 from app.modules.inventory.routers.admin_villas import router as admin_villas_router
 from app.modules.inventory.routers.syroce_marketplace import router as syroce_marketplace_router
+from app.modules.inventory.routers.syroce_contracts import router as syroce_contracts_router
 
 # --- Inventory sub-package (sync, booking, diagnostics, onboarding) ---
 from app.routers.inventory import (
@@ -76,6 +77,7 @@ domain_router.include_router(admin_catalog_router)
 domain_router.include_router(admin_tours_router)
 domain_router.include_router(admin_villas_router)
 domain_router.include_router(syroce_marketplace_router)
+domain_router.include_router(syroce_contracts_router)
 
 # Inventory sub-package
 domain_router.include_router(inv_sync_router)

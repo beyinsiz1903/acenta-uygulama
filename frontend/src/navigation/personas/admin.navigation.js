@@ -721,6 +721,15 @@ export const ADMIN_SIDEBAR_SECTIONS = [
         moduleKey: "syroce_marketplace",
       },
       {
+        key: "syroce-marketplace-contracts",
+        label: "Sözleşmelerim",
+        icon: FileText,
+        to: "/app/admin/syroce-marketplace/contracts",
+        visibleInSidebar: true,
+        visibleInSearch: true,
+        moduleKey: "syroce_marketplace",
+      },
+      {
         key: "syroce-marketplace-reservations",
         label: "Rezervasyonlarım",
         icon: CalendarDays,

@@ -1,0 +1,60 @@
+Sözleşme-Tabanlı Marketplace v2
+Veri Modeli — yeni agency_contracts koleksiyonu
+{
+  id, contract_code,                          # SOZ-2026-0001
+  agency_id, agency_name, agency_country,
+  tenant_id (hedef otel),
+  status: pending | approved | rejected | terminated | expired,
+  
+  commission_pct,                             # 15.0
+  cancellation_policy: {
+    free_until_days_before,                   # 7
+    penalty_pct,                              # 50
+    no_show_penalty_pct                       # 100
+  },
+  payment_terms: prepaid | on_arrival | net_7 | net_15 | net_30,
+  valid_from, valid_to,
+  currency: TRY|EUR|USD,
+  allowed_room_types: [],                     # boş = hepsi
+  special_terms: <markdown>,
+  
+  proposed_at, proposed_by_email,
+  decided_at, decided_by, decision_notes
+}
+
+Backend — routers/agency_contracts.py (yeni dosya)
+Acente tarafı (admin-token + X-API-Key ile, diğer Syroce projesinden gelir):
+
+POST /api/marketplace/v1/contracts/propose — yeni teklif
+GET /api/marketplace/v1/contracts/{id} — durum sorgulama
+GET /api/marketplace/v1/contracts/mine — tüm tekliflerim
+DELETE /api/marketplace/v1/contracts/{id} — geri çekme
+Otelci tarafı (PMS JWT):
+
+GET /api/marketplace/incoming-requests — gelen talepler (tab: pending/active/history)
+GET /api/marketplace/incoming-requests/{id} — detay
+POST /api/marketplace/incoming-requests/{id}/approve — onayla (komisyon override edilebilir)
+POST /api/marketplace/incoming-requests/{id}/reject — sebep ile reddet
+POST /api/marketplace/incoming-requests/{id}/terminate — aktif sözleşmeyi feshet
+marketplace_b2b.py Gating
+Şu üç yere "approved kontrat var mı?" kontrolü ekleyeceğim:
+
+GET /hotels → sadece anlaşmalı oteller listelenir
+POST /search → anlaşmasız otele arama 403
+POST /reservations → anlaşmasız otele rezervasyon 403, ayrıca komisyon kontrattan alınır
+Frontend — IncomingAgencyRequests.jsx (yeni sayfa)
+IntegrationHub.jsx içine yeni kart: "Gelen Acente Talepleri" rozeti ile birlikte (pending sayısı badge).
+
+Sayfa içeriği:
+
+3 tab: Bekleyen / Aktif Anlaşmalar / Geçmiş
+Bekleyen kartı: acente bilgisi, komisyon%, iptal politikası, ödeme vadesi, geçerlilik tarihleri, özel şartlar — sağda Onayla (komisyonu override edebilirsiniz dialog) / Reddet (sebep dialog)
+Aktif kart: yeşil, sağda Feshet butonu
+Geçmiş kart: gri, durum + sebep
+10 dile i18n
+Onaylamak istediğim 3 detay
+Komisyon override: Otelci "Acente %15 önerdi, ben %12'ye onaylıyorum" diyebilsin mi? (Önerim: Evet, dialog'da göster — gerçek hayatta pazarlık olur)
+
+Tek aktif sözleşme zorunluluğu: Aynı (acente, otel) çiftinin aynı anda yalnızca 1 aktif sözleşmesi olabilsin mi, yoksa farklı tarih aralıklarında üst üste binmeyen birden fazla olabilsin mi? (Önerim: Tek aktif — daha sade, fesih edip yenisini onaylasınlar)
+
+Mevcut acenteler: Şu an pazaryerinde aktif olan acente var mı, varsa onlara otomatik "approved" sözleşme oluşturayım mı (geçişi sorunsuz yapmak için), yoksa hepsinin yeniden teklif vermesi mi gereksin? (Önerim: Migrate et — kullanıcı deneyimi bozulmasın)

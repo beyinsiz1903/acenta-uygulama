@@ -159,3 +159,24 @@ class SyroceAgentClient:
         if tenant_id:
             params["tenant_id"] = tenant_id
         return await self._request("GET", "/reconciliation/agency", params=params)
+
+    # ── Contract methods (Marketplace v2: agency proposes contracts to hotels) ──
+
+    async def propose_contract(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Propose a new contract to a hotel (target tenant)."""
+        return await self._request("POST", "/api/marketplace/v1/contracts/propose", json_body=payload, timeout=30.0)
+
+    async def list_contracts(self, *, status: Optional[str] = None) -> Dict[str, Any]:
+        """List all contracts proposed by this agency, optionally filtered by status."""
+        params: Dict[str, Any] = {}
+        if status:
+            params["status"] = status
+        return await self._request("GET", "/api/marketplace/v1/contracts/mine", params=params or None)
+
+    async def get_contract(self, contract_id: str) -> Dict[str, Any]:
+        """Get a single contract's status and details."""
+        return await self._request("GET", f"/api/marketplace/v1/contracts/{contract_id}")
+
+    async def withdraw_contract(self, contract_id: str) -> Dict[str, Any]:
+        """Withdraw a pending contract proposal."""
+        return await self._request("DELETE", f"/api/marketplace/v1/contracts/{contract_id}")

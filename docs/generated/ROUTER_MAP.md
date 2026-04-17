@@ -1,5 +1,5 @@
 # Router Map — Endpoint → Domain
-> Auto-generated: 2026-04-17 07:20 UTC
+> Auto-generated: 2026-04-17 09:33 UTC
 > Source: `app/modules/*/` router registrations
 
 ## AUTH
@@ -123,6 +123,7 @@
 | Import | Alias |
 |--------|-------|
 | `router` | `admin_agencies_router` |
+| `router` | `admin_syroce_agencies_router` |
 | `router` | `admin_agency_users_router` |
 | `all_users_router` | `admin_all_users_router` |
 | `router` | `admin_api_keys_router` |

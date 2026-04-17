@@ -1,5 +1,5 @@
 # Cache Surfaces & TTL Strategy
-> Auto-generated: 2026-04-17 07:20 UTC
+> Auto-generated: 2026-04-17 09:33 UTC
 > Source: `app/services/cache_ttl_config.py`, `app/infrastructure/event_contracts.py`
 
 ## TTL Matrix (Default)

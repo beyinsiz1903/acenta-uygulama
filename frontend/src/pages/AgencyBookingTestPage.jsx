@@ -88,12 +88,12 @@ export default function AgencyBookingTestPage() {
         special_requests: formData.special_requests.trim() || undefined,
       };
 
-      console.log("[BookingDraft] Creating draft:", payload);
+      console.info("[BookingDraft] Creating draft:", payload);
 
       // Mock API call for testing
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      console.log("[BookingDraft] Draft created successfully (mocked)");
+      console.info("[BookingDraft] Draft created successfully (mocked)");
       alert("Test: Rezervasyon taslağı oluşturuldu (mocked)");
 
     } catch (err) {

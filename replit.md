@@ -195,6 +195,17 @@ Defense-in-depth pass on multi-tenant boundary + production hygiene.
 ### FX
 - **`b2b_hotels_search`** now uses `FXService.get_rate` (per-currency cache inside the loop, graceful 1:1 fallback on lookup failure).
 
+### Per-tenant rate limiting (T007)
+Built on the existing Redis token-bucket infra (`app/infrastructure/rate_limiter.py` + `app/middleware/rate_limit_middleware.py`):
+- New tier `tenant_global`: 600 req/min baseline per tenant (basic plan).
+- **Plan multiplier matrix** (`PLAN_MULTIPLIERS`): free 0.5×, basic 1.0×, starter 2.0×, pro 5.0×, business 10.0×, enterprise 25.0×. Override any plan at runtime via `SYROCE_RATE_PLAN_MULT_<PLAN>` env (e.g. `SYROCE_RATE_PLAN_MULT_PRO=12.5`).
+- **Plan scaling is restricted to `tenant_*` tiers only** — IP/auth/public-checkout tiers stay constant so an enterprise tenant can't brute-force `/auth/login` by burning their own quota.
+- Middleware now performs a per-tenant check after the per-IP global check, keyed on `request.state.tenant_org_id` (set by `TenantResolutionMiddleware`). Anonymous traffic remains IP-rate-limited only.
+- **Plan lookup** uses a 60s in-process TTL cache (`_PLAN_CACHE`, max 4096 entries with cheap eviction) — coalesces repeat requests per org down to ~1 DB hit per minute. DB failures are swallowed (defensive: rate-limit middleware must not 500 the request); unknown plans default to basic (1.0×).
+- **Fail-mode semantics fixed**: `check_rate_limit()` now raises `RateLimiterUnavailable` only when Redis itself is unreachable (connection/timeout/refused). Logic-level errors fail-open at source. The middleware's Mongo fallback is reached *only* on real outages — previously it was dead code because the function swallowed all exceptions.
+- **Per-IP × per-tenant interaction caveat**: each request is checked against BOTH `api_global` (200/min/IP) AND `tenant_global` (per-tenant, plan-scaled). For tenants behind a single shared egress IP (NAT'd offices), the per-IP cap dominates regardless of plan tier — documented inline. To benefit from higher plan multipliers, traffic must originate from multiple IPs or `api_global` capacity must be raised.
+- **Tests**: 13 DB-free unit tests in `tests/unit/test_rate_limiter_per_tenant.py` covering plan multiplier resolution, env override, case-insensitivity, tier-scaling math, plan-cache TTL coalescing, DB-failure graceful fallback, Redis-outage `RateLimiterUnavailable` raise, and Redis-disabled fail-open. New `tests/unit/conftest.py` keeps unit tests isolated from the heavyweight DB-touching autouse fixtures in the parent harness (workaround for the Atlas 500-collection blocker).
+
 ### Test hygiene (T011)
 - **Placeholder skipped test removed**: `tests/test_booking_payments_service.py::test_cas_update_amounts_conflict_raises` was an unconditional `@pytest.mark.skip` with `pass` body. Replaced with a real, DB-free test that stubs the `booking_payments` collection so `find_one_and_update` always returns `None`, asserting `AppError(409, "payment_concurrency_conflict")` is raised after exactly 2 CAS retries.
 - **Conftest harness fix**: `tests/conftest.py` truncates `test_db` / `seeded_test_db` database names to fit Atlas's 38-byte DB-name limit (was 45 chars → caused `Database name too long` errors).

@@ -8,19 +8,89 @@ Targets:
 - Password reset: 5 / 15 min
 - File uploads: 10 / 5 min
 - Global API rate limit: 200 requests / 1 min per IP
+- Per-tenant global rate limit: 600 req/min × plan multiplier (T007)
 
 Uses Redis token bucket (O(1), ~0.1ms) with MongoDB fallback.
+
+Note on per-IP × per-tenant interaction (T007 design):
+    Each request is checked against BOTH `api_global` (per-IP, 200/min) AND
+    `tenant_global` (per-tenant, 600/min × plan multiplier). For tenants that
+    egress through a single shared IP (small offices, NAT'd corporate
+    networks), the per-IP cap will dominate regardless of plan tier. To
+    benefit from a higher plan multiplier, traffic should originate from
+    multiple IPs (mobile clients, multi-pop deployments) or the per-IP cap
+    should be raised via the `api_global` tier in `RATE_TIERS`.
 """
 from __future__ import annotations
 
 import logging
-from typing import Optional
+import time
+from typing import Optional, Tuple
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 logger = logging.getLogger("rate_limit")
+
+# In-process TTL cache for org → plan_slug to avoid a DB hit on every request.
+# org_id -> (plan_slug or None, expiry_epoch)
+_PLAN_CACHE: dict[str, Tuple[Optional[str], float]] = {}
+_PLAN_CACHE_TTL_SECONDS = 60.0
+_PLAN_CACHE_MAX_ENTRIES = 4096
+
+
+async def _resolve_org_plan(org_id: str) -> Optional[str]:
+    """Look up the org's plan slug, with a 60s in-process TTL cache.
+
+    Returns None if the org or plan can't be resolved (caller treats as basic).
+    Never raises — defensive: rate-limit middleware must not 500 the request.
+    """
+    if not org_id:
+        return None
+    now = time.time()
+    cached = _PLAN_CACHE.get(org_id)
+    if cached and cached[1] > now:
+        return cached[0]
+
+    plan_slug: Optional[str] = None
+    try:
+        from app.db import get_db
+        db = await get_db()
+        org_doc = await db.organizations.find_one(
+            {"_id": org_id},
+            {"plan": 1, "plan_slug": 1, "subscription": 1},
+        )
+        if org_doc:
+            plan_slug = (
+                org_doc.get("plan_slug")
+                or org_doc.get("plan")
+                or (org_doc.get("subscription") or {}).get("plan")
+            )
+            if plan_slug is not None:
+                plan_slug = str(plan_slug).strip().lower() or None
+    except Exception as exc:
+        logger.debug("plan lookup failed for org=%s: %s", org_id, exc)
+
+    # Bound cache size — drop oldest entries if needed.
+    if len(_PLAN_CACHE) >= _PLAN_CACHE_MAX_ENTRIES:
+        # cheap eviction: drop ~25% of entries by expiry order
+        for k in sorted(_PLAN_CACHE, key=lambda k: _PLAN_CACHE[k][1])[: _PLAN_CACHE_MAX_ENTRIES // 4]:
+            _PLAN_CACHE.pop(k, None)
+
+    _PLAN_CACHE[org_id] = (plan_slug, now + _PLAN_CACHE_TTL_SECONDS)
+    return plan_slug
+
+
+def _get_tenant_org_id(request: Request) -> Optional[str]:
+    """Return the resolved tenant organization id from request.state, if any.
+
+    Set by TenantResolutionMiddleware which runs before this middleware.
+    """
+    org_id = getattr(request.state, "tenant_org_id", None)
+    if org_id and isinstance(org_id, str) and org_id.strip():
+        return org_id.strip()
+    return None
 
 # Path → (tier, key_type)
 PATH_TIER_MAP = {
@@ -93,7 +163,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     retry_after = max(1, result.retry_after_ms // 1000)
                     return self._rate_limit_response(retry_after, result.remaining)
 
-        # Global rate limit for all API requests
+        # Global rate limit for all API requests (per-IP)
         if path.startswith("/api"):
             client_ip = _get_client_ip(request)
             result = await self._check_redis_rate_limit(client_ip, "api_global")
@@ -101,26 +171,50 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 retry_after = max(1, result.retry_after_ms // 1000)
                 return self._rate_limit_response(retry_after, result.remaining)
 
+            # T007 — Per-tenant global rate limit, scaled by plan multiplier.
+            # Only runs when TenantResolutionMiddleware resolved a tenant for
+            # the request (i.e. authenticated tenant traffic). Public/anon
+            # paths fall through and rely on the per-IP limit above.
+            tenant_org_id = _get_tenant_org_id(request)
+            if tenant_org_id:
+                plan_slug = await _resolve_org_plan(tenant_org_id)
+                tenant_result = await self._check_redis_rate_limit(
+                    tenant_org_id, "tenant_global", plan_slug=plan_slug,
+                )
+                if tenant_result and not tenant_result.allowed:
+                    retry_after = max(1, tenant_result.retry_after_ms // 1000)
+                    return self._rate_limit_response(retry_after, tenant_result.remaining)
+
         response = await call_next(request)
         response.headers["X-RateLimit-Policy"] = "token_bucket"
         return response
 
-    async def _check_redis_rate_limit(self, key: str, tier: str):
-        """Try Redis rate limit, fall back to MongoDB if Redis unavailable."""
-        try:
-            from app.infrastructure.rate_limiter import check_rate_limit
-            return await check_rate_limit(key, tier)
-        except Exception as e:
-            logger.debug("Redis rate limit failed, falling back to MongoDB: %s", e)
-            return await self._check_mongo_fallback(key, tier)
+    async def _check_redis_rate_limit(self, key: str, tier: str, plan_slug: Optional[str] = None):
+        """Try Redis rate limit, fall back to MongoDB only on infra outages.
 
-    async def _check_mongo_fallback(self, key: str, tier: str):
+        ``RateLimiterUnavailable`` is raised by ``check_rate_limit`` when
+        Redis itself is unreachable (connection/timeout/refused). Logic-level
+        errors inside the script fail open at the source and reach us as a
+        normal allowed result — we do NOT spuriously hammer Mongo for those.
+        """
+        try:
+            from app.infrastructure.rate_limiter import check_rate_limit, RateLimiterUnavailable
+        except Exception as e:  # extremely defensive — import failure
+            logger.debug("rate_limiter import failed, allowing request: %s", e)
+            return None
+        try:
+            return await check_rate_limit(key, tier, plan_slug=plan_slug)
+        except RateLimiterUnavailable as e:
+            logger.info("Redis rate limit unavailable, falling back to MongoDB: %s", e)
+            return await self._check_mongo_fallback(key, tier, plan_slug=plan_slug)
+
+    async def _check_mongo_fallback(self, key: str, tier: str, plan_slug: Optional[str] = None):
         """MongoDB-based rate limit fallback."""
         from datetime import datetime, timedelta, timezone
         from app.db import get_db
-        from app.infrastructure.rate_limiter import RATE_TIERS, RateLimitResult
+        from app.infrastructure.rate_limiter import _scaled_config, RateLimitResult
 
-        config = RATE_TIERS.get(tier, RATE_TIERS["api_global"])
+        config = _scaled_config(tier, plan_slug)
         max_attempts = config["capacity"]
         window_seconds = int(config["capacity"] / max(config["refill_rate"], 0.001))
 

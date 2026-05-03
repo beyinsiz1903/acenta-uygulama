@@ -79,3 +79,7 @@ externalPort = 3000
 deploymentTarget = "autoscale"
 run = ["bash", "start_backend.sh"]
 build = ["bash", "-c", "cd frontend && yarn build"]
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 180000

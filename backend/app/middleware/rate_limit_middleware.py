@@ -24,8 +24,28 @@ Note on per-IP × per-tenant interaction (T007 design):
 from __future__ import annotations
 
 import logging
+import os
 import time
 from typing import Optional, Tuple
+
+
+def _rate_limiting_disabled() -> bool:
+    """Return True when rate limiting must be bypassed.
+
+    Bypass conditions (any one is enough):
+
+    * ``PYTEST_CURRENT_TEST`` is set — pytest is actively running. Test
+      suites issue many login / API calls in tight loops from a single
+      loopback IP and would otherwise exhaust the per-IP buckets, leading
+      to spurious 429s in fixtures (e.g. ``agency_token``).
+    * ``SYROCE_DISABLE_RATE_LIMIT`` is truthy — explicit operator escape
+      hatch for local debugging or for running smoke tests against a
+      preview deployment without burning quota.
+    """
+    if os.environ.get("PYTEST_CURRENT_TEST"):
+        return True
+    raw = os.environ.get("SYROCE_DISABLE_RATE_LIMIT", "").strip().lower()
+    return raw in {"1", "true", "yes", "on"}
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -145,6 +165,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         # Skip for health checks and OPTIONS
         if method == "OPTIONS" or path in ("/health", "/", "/api/health"):
+            return await call_next(request)
+
+        # Skip rate limiting under pytest / explicit env bypass.
+        if _rate_limiting_disabled():
             return await call_next(request)
 
         # Endpoint-specific rate limits on state-changing methods

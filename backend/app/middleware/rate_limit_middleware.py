@@ -28,6 +28,27 @@ import os
 import time
 from typing import Optional, Tuple
 
+logger = logging.getLogger("rate_limit")
+
+_PROD_ENV_VALUES = {"production", "prod", "live"}
+
+
+def _is_production_env() -> bool:
+    """Best-effort detection of a production runtime.
+
+    Checks (any positive match wins):
+    * ``SENTRY_ENVIRONMENT`` in {production, prod, live}
+    * ``ENVIRONMENT`` / ``APP_ENV`` / ``NODE_ENV`` in same set
+    * Replit deployment marker ``REPLIT_DEPLOYMENT`` truthy
+    """
+    for var in ("SENTRY_ENVIRONMENT", "ENVIRONMENT", "APP_ENV", "NODE_ENV"):
+        val = os.environ.get(var, "").strip().lower()
+        if val in _PROD_ENV_VALUES:
+            return True
+    if os.environ.get("REPLIT_DEPLOYMENT", "").strip().lower() in {"1", "true"}:
+        return True
+    return False
+
 
 def _rate_limiting_disabled() -> bool:
     """Return True when rate limiting must be bypassed.
@@ -40,18 +61,36 @@ def _rate_limiting_disabled() -> bool:
       to spurious 429s in fixtures (e.g. ``agency_token``).
     * ``SYROCE_DISABLE_RATE_LIMIT`` is truthy — explicit operator escape
       hatch for local debugging or for running smoke tests against a
-      preview deployment without burning quota.
+      preview deployment without burning quota. **Refused in production**:
+      if a production env marker is detected, this flag is logged-and-
+      ignored to prevent accidental quota disabling on live deployments.
+      To override this safety in a real incident, also set
+      ``SYROCE_DISABLE_RATE_LIMIT_FORCE_PROD=true``.
     """
     if os.environ.get("PYTEST_CURRENT_TEST"):
         return True
     raw = os.environ.get("SYROCE_DISABLE_RATE_LIMIT", "").strip().lower()
-    return raw in {"1", "true", "yes", "on"}
+    if raw not in {"1", "true", "yes", "on"}:
+        return False
+    if _is_production_env():
+        force = os.environ.get("SYROCE_DISABLE_RATE_LIMIT_FORCE_PROD", "").strip().lower()
+        if force not in {"1", "true", "yes", "on"}:
+            logger.warning(
+                "SYROCE_DISABLE_RATE_LIMIT is set in a production environment "
+                "and was IGNORED. Set SYROCE_DISABLE_RATE_LIMIT_FORCE_PROD=true "
+                "to override (incident-only)."
+            )
+            return False
+        logger.error(
+            "SYROCE_DISABLE_RATE_LIMIT_FORCE_PROD is active — rate limiting is "
+            "DISABLED in production. This must be a deliberate, time-boxed "
+            "incident response."
+        )
+    return True
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-
-logger = logging.getLogger("rate_limit")
 
 # In-process TTL cache for org → plan_slug to avoid a DB hit on every request.
 # org_id -> (plan_slug or None, expiry_epoch)

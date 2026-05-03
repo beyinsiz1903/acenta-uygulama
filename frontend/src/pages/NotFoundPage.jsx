@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { ArrowLeft, Home, Compass } from "lucide-react";
-import { getUser } from "../lib/api";
+import { getUser } from "../lib/authSession";
 
 /**
  * 404 — sayfa bulunamadı.

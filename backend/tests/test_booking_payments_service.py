@@ -60,11 +60,58 @@ async def test_cas_update_amounts_concurrency_and_invariants(test_db):
     assert after["status"] == "REFUNDED"
 
 
-@pytest.mark.skip("Explicit lock.version conflict simulation requires heavier DB mocking; covered implicitly by CAS design.")
 @pytest.mark.anyio
-async def test_cas_update_amounts_conflict_raises(test_db, monkeypatch):
-    # Placeholder: real concurrent writer simulation will be added with a more
-    # advanced Mongo mocking strategy. Current CAS implementation already
-    # retries once and raises payment_concurrency_conflict on persistent
-    # mismatches.
-    pass
+async def test_cas_update_amounts_conflict_raises():
+    """Forces a perpetual CAS conflict by stubbing the booking_payments
+    collection so ``find_one_and_update`` always returns ``None`` (simulating
+    another writer always winning the lock.version race). The CAS loop in
+    ``_cas_update_amounts`` retries exactly twice and must then raise
+    ``AppError(409, payment_concurrency_conflict)``.
+
+    This test is intentionally DB-free — it exercises the conflict-handling
+    branch in pure isolation so it runs even when an Atlas test database is
+    unavailable.
+    """
+    from app.errors import AppError
+
+    seeded_doc = {
+        "organization_id": "org_cas_conflict",
+        "booking_id": "bkg_cas_conflict",
+        "amount_total": 10000,
+        "amount_paid": 0,
+        "amount_refunded": 0,
+        "status": "PENDING",
+        "lock": {"version": 1},
+    }
+
+    call_count = {"find_one": 0, "update": 0}
+
+    class _FakeCollection:
+        async def find_one(self, *args, **kwargs):
+            call_count["find_one"] += 1
+            # Return the same seeded document on every read so the CAS loop
+            # always computes a stable "expected version".
+            return dict(seeded_doc)
+
+        async def find_one_and_update(self, *args, **kwargs):
+            call_count["update"] += 1
+            return None  # always conflict
+
+    class _FakeDB:
+        booking_payments = _FakeCollection()
+
+    service = BookingPaymentsService(_FakeDB())
+
+    with pytest.raises(AppError) as exc_info:
+        await service._cas_update_amounts(
+            "org_cas_conflict",
+            "bkg_cas_conflict",
+            delta_paid_cents=1000,
+        )
+
+    err = exc_info.value
+    assert err.status_code == 409
+    assert err.code == "payment_concurrency_conflict"
+    # CAS loop is `for attempt in range(2)` → exactly 2 attempts before raise.
+    assert call_count["update"] == 2
+    assert call_count["find_one"] == 2

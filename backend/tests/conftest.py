@@ -172,7 +172,10 @@ async def motor_client() -> AsyncGenerator[AsyncIOMotorClient, None]:
 async def seeded_test_db(motor_client: AsyncIOMotorClient) -> AsyncGenerator[Any, None]:
     """Function-scoped DB with minimal catalog/inventory seed for hotel search."""
 
-    db_name = f"agentis_test_seeded_{uuid.uuid4().hex}"
+    # Atlas enforces a 38-byte database name limit. "agentis_test_seeded_"
+    # is 20 chars, so we truncate the uuid hex to 16 chars (total = 36).
+    # 64-bit entropy → collision-resistant in practice, not guaranteed unique.
+    db_name = f"agentis_test_seeded_{uuid.uuid4().hex[:16]}"
     db = motor_client[db_name]
 
     async def _do_seed():
@@ -287,7 +290,10 @@ async def test_db(motor_client: AsyncIOMotorClient) -> AsyncGenerator[Any, None]
     Each test gets its own temporary database, dropped on teardown.
     """
 
-    db_name = f"agentis_test_{uuid.uuid4().hex}"
+    # Atlas enforces a 38-byte database name limit. "agentis_test_" is 13
+    # chars, so we truncate the uuid hex to 24 chars (total = 37).
+    # 96-bit entropy → collision-resistant in practice, not guaranteed unique.
+    db_name = f"agentis_test_{uuid.uuid4().hex[:24]}"
     db = motor_client[db_name]
     try:
         yield db

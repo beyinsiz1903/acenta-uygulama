@@ -195,5 +195,15 @@ Defense-in-depth pass on multi-tenant boundary + production hygiene.
 ### FX
 - **`b2b_hotels_search`** now uses `FXService.get_rate` (per-currency cache inside the loop, graceful 1:1 fallback on lookup failure).
 
+### Test hygiene (T011)
+- **Placeholder skipped test removed**: `tests/test_booking_payments_service.py::test_cas_update_amounts_conflict_raises` was an unconditional `@pytest.mark.skip` with `pass` body. Replaced with a real, DB-free test that stubs the `booking_payments` collection so `find_one_and_update` always returns `None`, asserting `AppError(409, "payment_concurrency_conflict")` is raised after exactly 2 CAS retries.
+- **Conftest harness fix**: `tests/conftest.py` truncates `test_db` / `seeded_test_db` database names to fit Atlas's 38-byte DB-name limit (was 45 chars → caused `Database name too long` errors).
+- **Module-level env-conditional skips kept** (`test_billing_lifecycle_iteration32.py`, `test_ratehawk_booking_flow_p0_iter116.py`, etc.) — these use the canonical `pytest.skip(..., allow_module_level=True)` pattern when `REACT_APP_BACKEND_URL` is unset for live HTTP integration tests.
+
+### Known infra blocker — pytest DB tests
+The shared Atlas free-tier cluster (`syroce.no04m9w.mongodb.net`) is at **500/500 collections** entirely from production-like databases (`syroce-acente`, `syroce-pms`, `syroce-sadakat`, etc.). Any pytest run that touches the DB currently errors with `cannot create a new collection -- already using 500 collections of 500`. Most autouse fixtures in `tests/conftest.py` create a per-test DB, so this affects nearly all backend tests including the new T011 test (whose code is logically correct in isolation). Resolution requires either:
+1. Upgrading the Atlas cluster tier, **or**
+2. Pointing `MONGO_URL` at a local Mongo instance for test runs.
+
 ### Deferred (future sprints)
-T004 alert→toast, T005 system/ split, T006 huge page splits, T007 per-tenant rate limit, T008 self-service export UI, T009 stripe/b2b refactors, T011 skipped tests, T012 lazy router loading, T013 stub page polish. See `.local/session_plan.md`.
+T005 system/ split, T006 huge page splits, T007 per-tenant rate limit, T008 self-service export UI, T009 stripe/b2b refactors, T012 lazy router loading, T013 stub page polish. See `.local/session_plan.md`.

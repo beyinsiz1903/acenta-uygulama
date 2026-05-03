@@ -42,13 +42,14 @@ from app.modules.inventory.routers.paximum import router as paximum_router
 from app.modules.inventory.routers.tourvisio import router as tourvisio_router
 
 # --- Inventory sub-package (sync, booking, diagnostics, onboarding) ---
-from app.routers.inventory import (
-    sync_router as inv_sync_router,
-    booking_router as inv_booking_router,
-    diagnostics_router as inv_diagnostics_router,
+# Migrated from app.routers.inventory.* to canonical module paths.
+from app.modules.inventory.routers.sync import router as inv_sync_router
+from app.modules.inventory.routers.booking_flow import router as inv_booking_router
+from app.modules.inventory.routers.diagnostics import (
+    router as inv_diagnostics_router,
     e2e_demo_router as inv_e2e_demo_router,
-    onboarding_router as inv_onboarding_router,
 )
+from app.modules.inventory.routers.onboarding import router as inv_onboarding_router
 
 domain_router = APIRouter()
 

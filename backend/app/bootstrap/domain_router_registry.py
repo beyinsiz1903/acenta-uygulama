@@ -49,17 +49,17 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(tenant_isolation_router)
 
     # Legacy admin: Orphan Migration + Outbox (kept here — cross-domain utilities)
-    from app.routers.admin_orphan_migration import router as orphan_migration_router
+    from app.modules.enterprise.routers.admin_orphan_migration import router as orphan_migration_router
     app.include_router(orphan_migration_router)
 
-    from app.routers.admin_outbox import router as outbox_admin_router
+    from app.modules.operations.routers.admin_outbox import router as outbox_admin_router
     app.include_router(outbox_admin_router, prefix="/api")
 
     # Webhook System (Organization-scoped + Admin)
-    from app.routers.webhooks import router as webhooks_router
+    from app.modules.system.routers.webhooks import router as webhooks_router
     app.include_router(webhooks_router, prefix="/api")
 
-    from app.routers.admin_webhooks import router as admin_webhooks_router
+    from app.modules.system.routers.admin_webhooks import router as admin_webhooks_router
     app.include_router(admin_webhooks_router, prefix="/api")
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -9,7 +9,6 @@ Manages scheduled background jobs using APScheduler:
 """
 from __future__ import annotations
 
-import asyncio
 import logging
 from datetime import datetime, timezone, timedelta
 from typing import Any
@@ -210,61 +209,56 @@ _scheduler_started = False
 _scheduler = None
 
 
-def _run_async_job(coro_func):
-    """Run an async job function in the event loop."""
-    try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            asyncio.ensure_future(coro_func())
-        else:
-            loop.run_until_complete(coro_func())
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(coro_func())
-
-
 def start_scheduler():
-    """Start the APScheduler with all configured jobs."""
+    """Start the APScheduler with all configured jobs.
+
+    Uses ``AsyncIOScheduler`` so jobs run on the same event loop as the
+    rest of FastAPI. Previously this was a ``BackgroundScheduler`` whose
+    thread had its own loop — that produced "Future attached to a
+    different loop" errors at every interval, because Motor's
+    ``AsyncIOMotorClient`` is bound to the loop on which it was first
+    created (FastAPI's main loop). All other schedulers in
+    ``app.bootstrap.scheduler_app`` already use ``AsyncIOScheduler``.
+    """
     global _scheduler_started, _scheduler
     if _scheduler_started:
         return
 
     try:
-        from apscheduler.schedulers.background import BackgroundScheduler
+        from apscheduler.schedulers.asyncio import AsyncIOScheduler
         from apscheduler.triggers.interval import IntervalTrigger
 
-        _scheduler = BackgroundScheduler(timezone="UTC")
+        _scheduler = AsyncIOScheduler(timezone="UTC")
 
         _scheduler.add_job(
-            lambda: _run_async_job(job_booking_status_sync),
+            job_booking_status_sync,
             IntervalTrigger(hours=1), id="booking_status_sync", name="Booking Status Sync",
             replace_existing=True,
         )
         _scheduler.add_job(
-            lambda: _run_async_job(job_supplier_reconciliation),
+            job_supplier_reconciliation,
             IntervalTrigger(hours=24), id="supplier_reconciliation", name="Supplier Reconciliation",
             replace_existing=True,
         )
         _scheduler.add_job(
-            lambda: _run_async_job(job_supplier_health_check),
+            job_supplier_health_check,
             IntervalTrigger(minutes=15), id="supplier_health_check", name="Supplier Health Check",
             replace_existing=True,
         )
         _scheduler.add_job(
-            lambda: _run_async_job(job_analytics_aggregation),
+            job_analytics_aggregation,
             IntervalTrigger(minutes=30), id="analytics_aggregation", name="Analytics Aggregation",
             replace_existing=True,
         )
         _scheduler.add_job(
-            lambda: _run_async_job(job_revenue_reconciliation),
+            job_revenue_reconciliation,
             IntervalTrigger(hours=24), id="revenue_reconciliation", name="Revenue Reconciliation",
             replace_existing=True,
         )
 
         _scheduler.start()
         _scheduler_started = True
-        logger.info("Job scheduler started with 5 scheduled jobs")
+        logger.info("Job scheduler started with 5 scheduled jobs (AsyncIOScheduler)")
     except Exception as e:
         logger.warning("Job scheduler start failed: %s", e)
 

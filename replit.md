@@ -206,6 +206,13 @@ Built on the existing Redis token-bucket infra (`app/infrastructure/rate_limiter
 - **Per-IP × per-tenant interaction caveat**: each request is checked against BOTH `api_global` (200/min/IP) AND `tenant_global` (per-tenant, plan-scaled). For tenants behind a single shared egress IP (NAT'd offices), the per-IP cap dominates regardless of plan tier — documented inline. To benefit from higher plan multipliers, traffic must originate from multiple IPs or `api_global` capacity must be raised.
 - **Tests**: 13 DB-free unit tests in `tests/unit/test_rate_limiter_per_tenant.py` covering plan multiplier resolution, env override, case-insensitivity, tier-scaling math, plan-cache TTL coalescing, DB-failure graceful fallback, Redis-outage `RateLimiterUnavailable` raise, and Redis-disabled fail-open. New `tests/unit/conftest.py` keeps unit tests isolated from the heavyweight DB-touching autouse fixtures in the parent harness (workaround for the Atlas 500-collection blocker).
 
+### Stub page polish (T013)
+- **NotFoundPage rewritten** — was a 22-line minimal stub. Now: (1) shows large "404" hero, (2) auth-aware destination (logged-in → `/app`, guests → `/login`), (3) "Geri dön" button uses `navigate(-1)` with empty-history fallback, (4) surfaces the unknown `location.pathname` so users can spot typos, (5) extra deep-link to `/app` for authed users.
+- **OnboardingWizard reviewed** — was *not* a stub: 240-line real, multi-step wizard with `/onboarding/state` integration. Audit's "stub" label was inaccurate. No changes needed.
+
+### Lazy router loading (T012)
+- **Already complete prior to this audit task** — confirmed via inventory: all 6 route files (`coreRoutes`, `agencyRoutes`, `adminRoutes`, `b2bRoutes`, `hotelRoutes`, `publicRoutes`) use `React.lazy()` exclusively for page components. Total ~234 lazy-loaded page chunks across the router, zero eager `import … from "../pages/…"` statements at the route layer. No further work required.
+
 ### Test hygiene (T011)
 - **Placeholder skipped test removed**: `tests/test_booking_payments_service.py::test_cas_update_amounts_conflict_raises` was an unconditional `@pytest.mark.skip` with `pass` body. Replaced with a real, DB-free test that stubs the `booking_payments` collection so `find_one_and_update` always returns `None`, asserting `AppError(409, "payment_concurrency_conflict")` is raised after exactly 2 CAS retries.
 - **Conftest harness fix**: `tests/conftest.py` truncates `test_db` / `seeded_test_db` database names to fit Atlas's 38-byte DB-name limit (was 45 chars → caused `Database name too long` errors).

@@ -7,6 +7,7 @@ import { Input } from "../components/ui/input";
 import { Switch } from "../components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/tabs";
 import { Loader2, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 export default function AdminExportsPage() {
   const [policies, setPolicies] = useState([]);
@@ -98,7 +99,7 @@ export default function AdminExportsPage() {
   const handleSave = async () => {
     try {
       if (!form.key) {
-        alert("Policy anahtarı (key) zorunludur");
+        toast("Policy anahtarı (key) zorunludur");
         return;
       }
       setSaving(true);
@@ -123,7 +124,7 @@ export default function AdminExportsPage() {
       };
       await api.put(`/admin/exports/policies/${form.key}`, payload);
       await loadPolicies();
-      alert("Policy kaydedildi");
+      toast.success("Policy kaydedildi");
     } catch (e) {
       console.error("Exports policy save failed", e);
       setError(apiErrorMessage(e));
@@ -134,7 +135,7 @@ export default function AdminExportsPage() {
 
   const handleRun = async (dry) => {
     if (!form.key) {
-      alert("f6nce policy kaydet");
+      toast("f6nce policy kaydet");
       return;
     }
     try {
@@ -151,7 +152,7 @@ export default function AdminExportsPage() {
       if (dry) {
         setRunDryResult(data);
       } else {
-        alert(
+        toast.success(
           `Run now tamamlandı. run_id=${data.run_id || "-"}${
             data.emailed ? ` (emailed to: ${(data.emailed_to || []).join(", ")})` : ""
           }`
@@ -164,7 +165,7 @@ export default function AdminExportsPage() {
       const msg = apiErrorMessage(e);
       setError(msg);
       if (!dry && msg.includes("EXPORT_COOLDOWN_ACTIVE")) {
-        alert("Cooldown aktif; bu policy için bir süre tekrar çalıştırılamaz.");
+        toast("Cooldown aktif; bu policy için bir süre tekrar çalıştırılamaz.");
       }
     } finally {
       setRunLoading(false);
@@ -190,7 +191,7 @@ export default function AdminExportsPage() {
       window.URL.revokeObjectURL(url);
     } catch (e) {
       console.error("Exports download failed", e);
-      alert(apiErrorMessage(e));
+      toast.error(apiErrorMessage(e));
     }
   };
 
@@ -587,7 +588,7 @@ export default function AdminExportsPage() {
                                       document.execCommand("copy");
                                       document.body.removeChild(ta);
                                     }
-                                    alert(`Deeplink şablonu panoya kopyalandı: ${text}`);
+                                    toast.success(`Deeplink şablonu panoya kopyalandı: ${text}`);
                                   }}
                                   data-testid="exports-run-copy-deeplink-template"
                                 >

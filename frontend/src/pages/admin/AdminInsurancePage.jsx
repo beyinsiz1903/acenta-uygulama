@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 import { Shield, Plus, Edit, Trash2, Search } from "lucide-react";
+import { toast } from "sonner";
 
 const STATUS_COLORS = {
   active: "bg-green-100 text-green-800",
@@ -126,7 +127,7 @@ export default function AdminInsurancePage() {
       body.customer_name = selectedCustomer.name;
     }
     if (!editItem && !body.customer_id) {
-      alert("Lütfen bir müşteri seçin");
+      toast("Lütfen bir müşteri seçin");
       return;
     }
     if (editItem) patchMut.mutate({ id: editItem.id, body });

@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import { toast } from "sonner";
 
 function formatCents(amount, currency) {
   const value = (Number(amount || 0) || 0) / 100;
@@ -202,7 +203,7 @@ export default function AdminSettlementsPage() {
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch (e) {
-      alert(apiErrorMessage(e));
+      toast.error(apiErrorMessage(e));
     }
   }
 

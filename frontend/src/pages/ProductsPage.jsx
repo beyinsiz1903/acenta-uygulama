@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { PageShell, DataTable, SortableHeader, FilterBar } from "../design-system";
 import { useProducts, useDeleteProduct } from "../features/bookings/hooks";
 import { ConfirmDialog } from "../design-system";
+import { toast } from "sonner";
 
 const TYPES = [
   { value: "tour", label: "Tur" },
@@ -116,7 +117,7 @@ export default function ProductsPage() {
       await deleteMutation.mutateAsync(deleteTarget.id);
       setDeleteTarget(null);
     } catch (e) {
-      alert(apiErrorMessage(e));
+      toast.error(apiErrorMessage(e));
     }
   }
 

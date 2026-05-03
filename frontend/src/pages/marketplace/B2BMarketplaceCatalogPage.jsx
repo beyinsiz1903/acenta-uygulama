@@ -6,6 +6,7 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Card } from "../../components/ui/card";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 function useTenantKey() {
   const STORAGE_KEY = "marketplace:tenantKey";
@@ -258,7 +259,7 @@ export default function B2BMarketplaceCatalogPage() {
 
                       const bookingId = res?.data?.booking_id;
                       if (bookingId) {
-                        window.alert(`Taslak oluşturuldu: ${bookingId}`);
+                        toast.success(`Taslak oluşturuldu: ${bookingId}`);
                       } else {
                         setError("Taslak oluşturma cevabı beklenen formatta değil.");
                       }

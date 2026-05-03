@@ -12,6 +12,7 @@ import {
   ChevronDown, FileText, Layers
 } from "lucide-react";
 import { api } from "../../lib/api";
+import { toast } from "sonner";
 
 // ─── Funnel Tab ──────────────────────────────────────────────
 function FunnelTab() {
@@ -191,7 +192,7 @@ function ReferralsTab() {
 
   const create = async () => {
     const res = await api.post("/growth/referrals", form);
-    if (res.data?.error) { alert(res.data.error); return; }
+    if (res.data?.error) { toast.error(res.data.error); return; }
     setShowForm(false);
     setForm({ referrer_name: "", referred_company_name: "", referred_contact_name: "", referred_email: "" });
     refetchReferrals();

@@ -15,6 +15,7 @@ import {
 } from "../components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { AlertCircle, Loader2, Trash2, Pencil } from "lucide-react";
+import { toast } from "sonner";
 
 function FieldError({ text }) {
   if (!text) return null;
@@ -261,7 +262,7 @@ export default function AdminPricingRulesPage() {
   const deleteMutation = useMutation({
     mutationFn: (id) => api.delete(`/pricing/rules/${id}`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["pricing", "rules"] }),
-    onError: (err) => alert(apiErrorMessage(err)),
+    onError: (err) => toast.error(apiErrorMessage(err)),
   });
 
   const handleDelete = (rule) => {

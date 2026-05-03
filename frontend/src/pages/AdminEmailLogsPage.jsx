@@ -6,6 +6,7 @@ import { api, apiErrorMessage } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Badge } from "../components/ui/badge";
+import { toast } from "sonner";
 import {
   Table,
   TableBody,
@@ -90,7 +91,7 @@ export default function AdminEmailLogsPage() {
   const retryMutation = useMutation({
     mutationFn: (jobId) => api.post(`/admin/email-outbox/${jobId}/retry`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "email-outbox"] }),
-    onError: (e) => alert(apiErrorMessage(e)),
+    onError: (e) => toast.error(apiErrorMessage(e)),
   });
 
   async function handleRetry(job) {

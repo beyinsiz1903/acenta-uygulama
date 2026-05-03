@@ -10,6 +10,7 @@ import { Input } from "../components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import EmptyState from "../components/EmptyState";
 import { PageShell } from "../design-system";
+import { toast } from "sonner";
 
 const REPORT_DAY_OPTIONS = [7, 30, 90];
 
@@ -143,7 +144,7 @@ export default function ReportsPage() {
       a.click();
       window.URL.revokeObjectURL(url);
     } catch (e) {
-      alert(apiErrorMessage(e));
+      toast.error(apiErrorMessage(e));
     }
   }
 

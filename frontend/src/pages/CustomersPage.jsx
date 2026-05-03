@@ -9,6 +9,7 @@ import { Label } from "../components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../components/ui/dialog";
 import { PageShell, DataTable, SortableHeader, FilterBar } from "../design-system";
 import { ConfirmDialog } from "../design-system";
+import { toast } from "sonner";
 
 /* ───────── Customer Form Dialog ───────── */
 function CustomerForm({ open, onOpenChange, initial, onSaved }) {
@@ -112,7 +113,7 @@ export default function CustomersPage() {
       setDeleteTarget(null);
       queryClient.invalidateQueries({ queryKey: ["customers"] });
     },
-    onError: (e) => alert(apiErrorMessage(e)),
+    onError: (e) => toast.error(apiErrorMessage(e)),
   });
 
   function handleDelete() {

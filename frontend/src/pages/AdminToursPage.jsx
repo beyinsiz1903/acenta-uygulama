@@ -7,6 +7,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Badge } from "../components/ui/badge";
+import { toast } from "sonner";
 import {
   Plus, Trash2, Edit2, Upload, X, MapPin, Clock,
   Globe, Save, Loader2, ArrowLeft, CheckCircle,
@@ -63,7 +64,7 @@ export default function AdminToursPage() {
   const handleDelete = async (tourId) => {
     if (!window.confirm("Bu turu silmek istediginizden emin misiniz?")) return;
     try { await api.delete("/admin/tours/" + tourId); queryClient.invalidateQueries({ queryKey: ["admin", "tours"] }); }
-    catch(e) { alert("Tur silinirken hata olustu."); }
+    catch(e) { toast.error("Tur silinirken hata olustu."); }
   };
 
   const handleSave = async (e) => {
@@ -89,7 +90,7 @@ export default function AdminToursPage() {
         if (!form.cover_image) setForm((f) => ({ ...f, cover_image: res.data.url }));
         setForm((f) => ({ ...f, images: [...f.images, res.data.url] }));
       }
-    } catch(e) { alert("Resim yuklenirken hata olustu."); }
+    } catch(e) { toast.error("Resim yuklenirken hata olustu."); }
     finally { setUploading(false); e.target.value = ""; }
   };
 

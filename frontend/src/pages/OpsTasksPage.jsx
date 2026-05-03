@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Label } from "../components/ui/label";
 import { PageShell, DataTable, FilterBar, StatusBadge } from "../design-system";
 import { useOpsTasks } from "../features/operations/hooks";
+import { toast } from "sonner";
 
 function formatDT(value) {
   if (!value) return "-";
@@ -67,7 +68,7 @@ function NewTaskForm({ onCreated }) {
       onCreated?.();
       setTitle(""); setDescription(""); setDueAt(""); setSlaHours(""); setAssigneeEmail(""); setTags("");
     } catch (e) {
-      alert("Görev oluşturulamadı: " + apiErrorMessage(e));
+      toast.error("Görev oluşturulamadı: " + apiErrorMessage(e));
     } finally {
       setSubmitting(false);
     }
@@ -154,7 +155,7 @@ export default function OpsTasksPage() {
       await api.patch(`/ops/tasks/${task.task_id}`, { status: newStatus });
       refetch();
     } catch (e) {
-      alert("Görev güncellenemedi: " + apiErrorMessage(e));
+      toast.error("Görev güncellenemedi: " + apiErrorMessage(e));
     }
   }
 

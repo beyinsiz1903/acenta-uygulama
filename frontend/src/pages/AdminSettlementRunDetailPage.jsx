@@ -12,6 +12,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
 import { Badge } from "../components/ui/badge";
+import { toast } from "sonner";
 
 function StatusBadge({ status }) {
   if (!status) return null;
@@ -100,7 +101,7 @@ export default function AdminSettlementRunDetailPage() {
       await api.post(`/ops/finance/settlements/${run.settlement_id}/approve`, {});
       refetch();
     } catch (e) {
-      alert(apiErrorMessage(e));
+      toast.error(apiErrorMessage(e));
     } finally {
       setActionLoading(false);
     }
@@ -110,7 +111,7 @@ export default function AdminSettlementRunDetailPage() {
     if (!run) return;
     const id = accrualToAdd.trim();
     if (!id) {
-      alert("Lütfen eklenecek accrual_id girin.");
+      toast("Lütfen eklenecek accrual_id girin.");
       return;
     }
     setActionLoading(true);
@@ -119,7 +120,7 @@ export default function AdminSettlementRunDetailPage() {
       setAccrualToAdd("");
       refetch();
     } catch (e) {
-      alert(apiErrorMessage(e));
+      toast.error(apiErrorMessage(e));
     } finally {
       setActionLoading(false);
     }
@@ -128,7 +129,7 @@ export default function AdminSettlementRunDetailPage() {
   async function handleCancel() {
     if (!run) return;
     if (!cancelReason.trim()) {
-      alert("Lütfen iptal sebebi girin.");
+      toast("Lütfen iptal sebebi girin.");
       return;
     }
     setActionLoading(true);
@@ -138,7 +139,7 @@ export default function AdminSettlementRunDetailPage() {
       });
       refetch();
     } catch (e) {
-      alert(apiErrorMessage(e));
+      toast.error(apiErrorMessage(e));
     } finally {
       setActionLoading(false);
     }
@@ -153,7 +154,7 @@ export default function AdminSettlementRunDetailPage() {
       });
       refetch();
     } catch (e) {
-      alert(apiErrorMessage(e));
+      toast.error(apiErrorMessage(e));
     } finally {
       setActionLoading(false);
     }

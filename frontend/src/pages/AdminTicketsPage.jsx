@@ -6,6 +6,7 @@ import { Badge } from "../components/ui/badge";
 import { QrCode, CheckCircle, Plus, Search, RefreshCw, XCircle, BarChart3, X, Download, Printer } from "lucide-react";
 import { cn } from "../lib/utils";
 import { QRCodeSVG } from "qrcode.react";
+import { toast } from "sonner";
 
 const STATUS_MAP = {
   active: { label: "Aktif", className: "bg-green-100 text-green-700" },
@@ -47,7 +48,7 @@ export default function AdminTicketsPage() {
       setForm({ reservation_id: "", product_name: "", customer_name: "", customer_email: "", customer_phone: "", event_date: "", seat_info: "" });
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
     },
-    onError: (e) => alert(e.response?.data?.error?.message || e.message),
+    onError: (e) => toast.error(e.response?.data?.error?.message || e.message),
   });
 
   const handleCreate = () => {
@@ -76,7 +77,7 @@ export default function AdminTicketsPage() {
   const cancelMutation = useMutation({
     mutationFn: (code) => api.post(`/tickets/${code}/cancel`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["tickets"] }),
-    onError: (e) => alert(e.response?.data?.detail || e.message),
+    onError: (e) => toast(e.response?.data?.detail || e.message),
   });
 
   const handleCancel = (code) => {

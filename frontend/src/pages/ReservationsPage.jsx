@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../components/ui/sheet";
 import { PageShell, DataTable, SortableHeader, FilterBar, StatusBadge } from "../design-system";
 import { useReservations } from "../features/bookings/hooks";
+import { toast } from "sonner";
 
 /* ───────── Info Card (detail sheet) ───────── */
 function InfoCard({ icon: Icon, label, value, accent, className = "" }) {
@@ -149,7 +150,7 @@ function PaymentForm({ reservationId, currency, onSaved }) {
       await api.post("/payments", { reservation_id: reservationId, method, amount: Number(amount || 0), currency, reference, status: "paid" });
       setAmount(""); setReference("");
       onSaved?.();
-    } catch (e) { alert(apiErrorMessage(e)); }
+    } catch (e) { toast.error(apiErrorMessage(e)); }
     finally { setLoading(false); }
   }
 
@@ -320,7 +321,7 @@ function ReservationDetails({ open, onOpenChange, reservationId }) {
       const url = URL.createObjectURL(blob);
       window.open(url, "_blank");
       setTimeout(() => URL.revokeObjectURL(url), 5000);
-    } catch { alert("Voucher açılamadı."); }
+    } catch { toast("Voucher açılamadı."); }
   }, [reservationId]);
 
   const sendWhatsApp = useCallback(() => {

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 import { FileCheck, Plus, Edit, Trash2, Search } from "lucide-react";
+import { toast } from "sonner";
 
 const VISA_STATUSES = {
   draft: { label: "Taslak", color: "bg-gray-100 text-gray-700" },
@@ -123,7 +124,7 @@ export default function AdminVisaPage() {
       body.customer_name = selectedCustomer.name;
     }
     if (!editItem && !body.customer_id) {
-      alert("Lütfen bir müşteri seçin");
+      toast("Lütfen bir müşteri seçin");
       return;
     }
     if (editItem) patchMut.mutate({ id: editItem.id, body });

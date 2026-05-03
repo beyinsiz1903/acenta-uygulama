@@ -5,6 +5,7 @@ import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { CheckCircle, XCircle, Clock, ShieldCheck, Filter } from "lucide-react";
 import { cn } from "../lib/utils";
+import { toast } from "sonner";
 
 const STATUS_TABS = [
   { key: "all", label: "Tümü" },
@@ -33,7 +34,7 @@ export default function AdminApprovalInboxPage() {
   const approveMutation = useMutation({
     mutationFn: (id) => api.post(`/approvals/${id}/approve`, {}),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["approvals"] }),
-    onError: (e) => alert(e.response?.data?.error?.message || e.message),
+    onError: (e) => toast.error(e.response?.data?.error?.message || e.message),
     onSettled: () => setActionLoading(null),
   });
 
@@ -49,7 +50,7 @@ export default function AdminApprovalInboxPage() {
       setRejectNote("");
       queryClient.invalidateQueries({ queryKey: ["approvals"] });
     },
-    onError: (e) => alert(e.response?.data?.error?.message || e.message),
+    onError: (e) => toast.error(e.response?.data?.error?.message || e.message),
     onSettled: () => setActionLoading(null),
   });
 

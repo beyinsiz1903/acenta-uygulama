@@ -31,6 +31,7 @@ import {
   DialogFooter,
 } from "../components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { toast } from "sonner";
 
 function LeadForm({ open, onOpenChange, onSaved }) {
   const [customers, setCustomers] = useState([]);
@@ -448,10 +449,10 @@ export default function CrmPage() {
   const convertMutation = useMutation({
     mutationFn: (id) => api.post("/quotes/convert", { quote_id: id }),
     onSuccess: (resp) => {
-      alert(`Teklif rezervasyona çevrildi. PNR: ${resp.data.pnr}`);
+      toast.success(`Teklif rezervasyona çevrildi. PNR: ${resp.data.pnr}`);
       queryClient.invalidateQueries({ queryKey: ["crm"] });
     },
-    onError: (e) => alert(apiErrorMessage(e)),
+    onError: (e) => toast.error(apiErrorMessage(e)),
   });
 
   function convertQuote(id) {
@@ -516,7 +517,7 @@ export default function CrmPage() {
       });
       await refetch();
     } catch (e) {
-      alert(apiErrorMessage(e));
+      toast.error(apiErrorMessage(e));
       await refetch();
     }
   }

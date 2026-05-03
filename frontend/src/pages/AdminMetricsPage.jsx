@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { StatCard } from "../components/StatCard";
 import { TrendChart } from "../components/TrendChart";
 import { api, apiErrorMessage } from "../lib/api";
+import { toast } from "sonner";
 
 function formatHours(v) {
   if (v == null || Number.isNaN(Number(v))) return "—";
@@ -306,7 +307,7 @@ export default function AdminMetricsPage() {
       if (res.data?.ok) {
         // Reload metrics
         await load();
-        alert(`✅ Demo verisi oluşturuldu!\n${res.data.inserted} kayıt eklendi.`);
+        toast.success(`✅ Demo verisi oluşturuldu!\n${res.data.inserted} kayıt eklendi.`);
       }
     } catch (e) {
       setErr(apiErrorMessage ? apiErrorMessage(e) : (e?.message || "Demo verisi oluşturulamadı"));

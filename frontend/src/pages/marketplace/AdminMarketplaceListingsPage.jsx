@@ -13,6 +13,7 @@ import {
 } from "../../components/ui/dialog";
 import { Badge } from "../../components/ui/badge";
 import { AlertCircle, Loader2, Pencil, Upload, Archive } from "lucide-react";
+import { toast } from "sonner";
 
 function FieldError({ text }) {
   if (!text) return null;
@@ -255,7 +256,7 @@ export default function AdminMarketplaceListingsPage() {
       await load();
     } catch (err) {
        
-      alert(apiErrorMessage(err));
+      toast.error(apiErrorMessage(err));
     } finally {
       setBusyActionId(null);
     }
@@ -268,7 +269,7 @@ export default function AdminMarketplaceListingsPage() {
       await load();
     } catch (err) {
        
-      alert(apiErrorMessage(err));
+      toast.error(apiErrorMessage(err));
     } finally {
       setBusyActionId(null);
     }

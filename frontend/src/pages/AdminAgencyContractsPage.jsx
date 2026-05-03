@@ -17,6 +17,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "../components/ui/dialog";
 import EmptyState from "../components/EmptyState";
+import { toast } from "sonner";
 
 /* ─────── Tabs ─────── */
 function TabButton({ active, onClick, icon: Icon, label, count }) {
@@ -477,7 +478,7 @@ export default function AdminAgencyContractsPage() {
       await api.delete(`/admin/agency-contracts/pricing/${contractId}`);
       loadData();
     } catch (e) {
-      alert(apiErrorMessage(e));
+      toast.error(apiErrorMessage(e));
     }
   }
 

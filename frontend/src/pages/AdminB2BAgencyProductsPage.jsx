@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
+import { toast } from "sonner";
 
 function ProductTypeBadge({ type }) {
   if (!type) return null;
@@ -45,7 +46,7 @@ export default function AdminB2BAgencyProductsPage() {
   const toggleMutation = useMutation({
     mutationFn: ({ productId, blocked }) => api.put(`/admin/b2b/visibility/agencies/${agencyId}/products/${productId}`, { blocked }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "b2b", "agency-products"] }),
-    onError: (e) => alert(apiErrorMessage(e)),
+    onError: (e) => toast.error(apiErrorMessage(e)),
     onSettled: () => setSavingId(""),
   });
 

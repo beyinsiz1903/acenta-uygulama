@@ -6,6 +6,7 @@ import { Switch } from "../components/ui/switch";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Loader2, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 export default function AdminMatchAlertsPolicyPage() {
   const [loading, setLoading] = useState(true);
@@ -506,7 +507,7 @@ export default function AdminMatchAlertsPolicyPage() {
                   });
                   const data = resp.data || {};
                   // Basit feedback
-                  alert(
+                  toast.success(
                     `Run Now tamamlandı. Sent: ${data.sent_count || 0}, Failed: ${
                       data.failed_count || 0
                     }`

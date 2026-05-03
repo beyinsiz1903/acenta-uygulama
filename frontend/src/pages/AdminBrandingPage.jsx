@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Palette, Image, Building2, Save, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 
 function hexToHsl(hex) {
   let r = 0, g = 0, b = 0;
@@ -121,7 +122,7 @@ export default function AdminBrandingPage() {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (e) {
-      alert("Kaydetme hatası: " + (e.response?.data?.error?.message || e.message));
+      toast.error("Kaydetme hatası: " + (e.response?.data?.error?.message || e.message));
     } finally {
       setSaving(false);
     }

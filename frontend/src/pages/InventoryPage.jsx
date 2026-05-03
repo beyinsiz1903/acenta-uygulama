@@ -16,6 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { cn } from "../lib/utils";
 import { PageShell } from "../design-system";
+import { toast } from "sonner";
 
 const InventoryCtx = React.createContext({ invMap: new Map() });
 
@@ -218,7 +219,7 @@ export default function InventoryPage() {
       await loadInventory(productId);
       setOpenDay(false);
     } catch (e) {
-      alert(apiErrorMessage(e));
+      toast.error(apiErrorMessage(e));
     } finally {
       setDaySaving(false);
     }
@@ -252,7 +253,7 @@ export default function InventoryPage() {
       });
       await loadInventory(productId);
     } catch (e) {
-      alert(apiErrorMessage(e));
+      toast.error(apiErrorMessage(e));
     } finally {
       setBulkLoading(false);
     }

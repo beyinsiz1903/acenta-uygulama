@@ -190,6 +190,7 @@ Defense-in-depth pass on multi-tenant boundary + production hygiene.
 - **`console.log/debug` stripped** from 7 production agency pages (search/booking/hotel flows).
 - **ESLint `no-console` rule** added (allows warn/error/info).
 - **`market_launch_service` support channels** read from env (`SYROCE_SUPPORT_EMAIL`, `SYROCE_SUPPORT_WHATSAPP`) — no `XXX` placeholders.
+- **`alert()` → sonner toast**: 54 alert sites across 29 admin/marketplace/CRM pages migrated to non-blocking sonner toasts (`toast.success` / `toast.error` / `toast()`), preserving existing `<Toaster richColors closeButton />` mount in `App.js`.
 
 ### FX
 - **`b2b_hotels_search`** now uses `FXService.get_rate` (per-currency cache inside the loop, graceful 1:1 fallback on lookup failure).

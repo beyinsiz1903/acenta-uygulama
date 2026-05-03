@@ -4,6 +4,7 @@ import { api } from "../lib/api";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { MessageSquare, Send, RefreshCw, Phone } from "lucide-react";
+import { toast } from "sonner";
 
 export default function AdminSMSPage() {
   const queryClient = useQueryClient();
@@ -31,7 +32,7 @@ export default function AdminSMSPage() {
       setForm({ to: "", template_key: "custom", variables: { message: "" } });
       queryClient.invalidateQueries({ queryKey: ["sms"] });
     },
-    onError: (e) => alert(e.response?.data?.error?.message || e.message),
+    onError: (e) => toast.error(e.response?.data?.error?.message || e.message),
   });
 
   const handleSend = () => {

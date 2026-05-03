@@ -44,6 +44,9 @@ module.exports = [
       "react/no-unescaped-entities": "off",
       "react/prop-types": "off",
       "react/react-in-jsx-scope": "off",
+      // Production hygiene: console.warn / console.error are still allowed
+      // (real diagnostics), but raw console.log/debug should not ship.
+      "no-console": ["warn", { allow: ["warn", "error", "info"] }],
     },
   },
 ];

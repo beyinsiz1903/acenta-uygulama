@@ -30,7 +30,6 @@ export default function AgencyBookingDraftPage() {
     setError("");
     try {
       const resp = await api.get(`/agency/bookings/draft/${draftId}`);
-      console.log("[BookingDraft] Loaded:", resp.data);
       setDraft(resp.data);
     } catch (err) {
       console.error("[BookingDraft] Load error:", err);
@@ -57,7 +56,6 @@ export default function AgencyBookingDraftPage() {
       const resp = await api.post("/agency/bookings/confirm", {
         draft_id: draftId,
       });
-      console.log("[BookingDraft] Confirmed:", resp.data);
       toast.success("Rezervasyon onaylandı");
       
       // Navigate to confirmed page
@@ -96,7 +94,6 @@ export default function AgencyBookingDraftPage() {
     setCancelLoading(true);
     try {
       await api.delete(`/agency/bookings/draft/${draftId}`);
-      console.log("[BookingDraft] Cancelled");
       toast.success("Taslak iptal edildi");
       navigate("/app/agency/hotels");
     } catch (err) {

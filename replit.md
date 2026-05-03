@@ -175,3 +175,24 @@ Per-organization module toggle system allowing each agency to enable/disable spe
 - **Email Templates → Outbox**: `email_template_resolver.py` service resolves templates by `trigger_key` with variable substitution; wired into `enqueue_booking_email` with fallback to hardcoded HTML
 - **Insurance → Renew**: Policy renewal endpoint creates new policy linked to previous one
 - **Search**: All list endpoints support `search` query parameter for name/number text search
+
+## P0–P3 Audit Hardening (2026-05-03)
+
+Defense-in-depth pass on multi-tenant boundary + production hygiene.
+
+### Security / Tenancy
+- **Defensive `organization_id` filters** added at 5 lookup sites (orchestrator, b2c_post_payment, approval_service, advanced_reports_service) plus call-site wiring in `stripe_handlers` (passes `organization_id` from Stripe metadata) and `enterprise_approvals` router (now calls `get_approval` tenant-scoped).
+- **`backup_service.delete_backup`** explicitly documented as platform-wide (super_admin scope).
+- **Tour image static mount** (`/api/uploads/tours`) confirmed and documented as **intentionally public** — referenced by storefront/SEO/OG. Filenames are random UUIDs, upload endpoint is admin-auth gated, image-only, 10MB cap, extension allowlist, directory listing disabled.
+
+### Production hygiene
+- **Test routes gated**: `AgencyBookingTestPage`, `SimpleBookingTest` mounted only when `IS_DEV` (NODE_ENV !== "production").
+- **`console.log/debug` stripped** from 7 production agency pages (search/booking/hotel flows).
+- **ESLint `no-console` rule** added (allows warn/error/info).
+- **`market_launch_service` support channels** read from env (`SYROCE_SUPPORT_EMAIL`, `SYROCE_SUPPORT_WHATSAPP`) — no `XXX` placeholders.
+
+### FX
+- **`b2b_hotels_search`** now uses `FXService.get_rate` (per-currency cache inside the loop, graceful 1:1 fallback on lookup failure).
+
+### Deferred (future sprints)
+T004 alert→toast, T005 system/ split, T006 huge page splits, T007 per-tenant rate limit, T008 self-service export UI, T009 stripe/b2b refactors, T011 skipped tests, T012 lazy router loading, T013 stub page polish. See `.local/session_plan.md`.

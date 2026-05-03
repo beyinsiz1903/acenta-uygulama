@@ -18,13 +18,21 @@ from app.services.vouchers import generate_for_booking, get_active_voucher
 from app.utils import now_utc
 
 
-async def run_b2c_post_payment_side_effects(db, *, booking_id: str) -> None:
+async def run_b2c_post_payment_side_effects(
+    db,
+    *,
+    booking_id: str,
+    organization_id: Optional[str] = None,
+) -> None:
     """Confirm public booking + issue voucher PDF + enqueue guest email.
 
     Design goals:
     - Idempotent: can be called multiple times safely
     - Best-effort: swallows all exceptions (should not break payment flow)
     - Scoped to B2C: only runs for bookings with source="public"
+    - Tenant-aware: when ``organization_id`` is provided, lookup is filtered
+      to prevent cross-tenant booking_id collisions from triggering side
+      effects on the wrong tenant.
     """
 
     try:
@@ -34,7 +42,11 @@ async def run_b2c_post_payment_side_effects(db, *, booking_id: str) -> None:
             # Non-ObjectId booking ids are not part of public checkout flow
             return
 
-        booking = await db.bookings.find_one({"_id": oid})
+        lookup = {"_id": oid}
+        if organization_id:
+            lookup["organization_id"] = organization_id
+
+        booking = await db.bookings.find_one(lookup)
         if not booking:
             return
 
@@ -45,6 +57,9 @@ async def run_b2c_post_payment_side_effects(db, *, booking_id: str) -> None:
 
         org_id = booking.get("organization_id")
         if not org_id:
+            return
+        # If caller pinned an organization, double-check ownership defensively.
+        if organization_id and str(org_id) != str(organization_id):
             return
 
         # 1) Promote booking to CONFIRMED if not already in a final status
@@ -61,7 +76,7 @@ async def run_b2c_post_payment_side_effects(db, *, booking_id: str) -> None:
             )
 
         # Reload booking to observe potential status change (optional, but safe)
-        booking = await db.bookings.find_one({"_id": oid}) or booking
+        booking = await db.bookings.find_one(lookup) or booking
 
         # 2) Ensure there is an active voucher and persist a PDF rendition.
         # For B2C we keep this idempotent: if there is already an active voucher

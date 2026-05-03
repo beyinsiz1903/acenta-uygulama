@@ -35,7 +35,9 @@ from app.exception_handlers import register_exception_handlers
 def register_routers(app: FastAPI) -> None:
     register_exception_handlers(app)
 
-    # Static files
+    # Static files — tour images are intentionally PUBLIC (storefront/SEO).
+    # See router_registry.py for the full rationale and hardening notes.
+    # Do NOT auth-gate without auditing every storefront consumer.
     uploads_dir = Path(__file__).resolve().parents[1] / "uploads" / "tours"
     uploads_dir.mkdir(parents=True, exist_ok=True)
     app.mount("/api/uploads/tours", StaticFiles(directory=str(uploads_dir)), name="tour_uploads")

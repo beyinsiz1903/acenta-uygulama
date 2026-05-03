@@ -104,7 +104,6 @@ export default function AgencyHotelDetailPage() {
         return;
       }
 
-      console.log("[HotelDetail] Loaded:", foundHotel);
       // Normalize field names
       setHotel({
         ...foundHotel,
@@ -175,12 +174,10 @@ export default function AgencyHotelDetailPage() {
         currency: "TRY",
       };
 
-      console.log("[HotelDetail] Search API call:", searchPayload);
 
       const resp = await api.post("/agency/search", searchPayload);
       const searchData = resp.data;
 
-      console.log("[HotelDetail] Search response:", searchData);
 
       // Navigate to search results with search_id
       navigate(`/app/agency/search?search_id=${searchData.search_id}`, {

@@ -22,7 +22,6 @@ export default function AgencyBookingConfirmedPage() {
   const [hotelNote, setHotelNote] = useState("");
 
   useEffect(() => {
-    console.log("[BookingConfirmed] booking_id:", bookingId);
     if (!booking) {
       loadBooking();
     }
@@ -33,7 +32,6 @@ export default function AgencyBookingConfirmedPage() {
     setError("");
     try {
       const resp = await api.get(`/agency/bookings/${bookingId}`);
-      console.log("[BookingConfirmed] Loaded:", resp.data);
       setBooking(resp.data);
     } catch (err) {
       console.error("[BookingConfirmed] Load error:", err);
@@ -189,7 +187,6 @@ export default function AgencyBookingConfirmedPage() {
     // Track WhatsApp click before opening the external window.
     try {
       await api.post(`/bookings/${bookingId}/track/whatsapp-click`);
-      console.log("[BookingConfirmed] WhatsApp click tracked");
     } catch (err) {
       console.error("[BookingConfirmed] WhatsApp tracking failed:", err);
       // Don't block user experience if tracking fails

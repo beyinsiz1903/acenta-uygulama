@@ -95,7 +95,10 @@ async def orchestrate_booking(
     start_time = time.monotonic()
 
     # Ensure booking document exists (create draft if needed)
-    existing = await db.bookings.find_one({"_id": booking_id})
+    # Tenant-scoped lookup: prevents cross-tenant booking ID collision attacks.
+    existing = await db.bookings.find_one(
+        {"_id": booking_id, "organization_id": ctx.organization_id}
+    )
     if not existing:
         await db.bookings.insert_one({
             "_id": booking_id,

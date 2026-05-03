@@ -227,6 +227,17 @@ from app.modules.booking.migration_router import router as booking_migration_rou
 def register_routers(app: FastAPI) -> None:
     register_exception_handlers(app)
 
+    # NOTE: Tour cover/gallery images are intentionally served as PUBLIC
+    # static assets — they are referenced from the public storefront,
+    # tour detail pages and SEO/OG previews where no auth context exists.
+    # Hardening relied upon:
+    #   - Filenames are random UUIDs (no enumeration)
+    #   - Upload endpoint (admin_tours) is admin-auth gated, image-only,
+    #     extension-whitelisted and 10MB capped
+    #   - StaticFiles disables directory listing by default
+    # Do NOT auth-gate this mount without first auditing every storefront
+    # consumer or you WILL break public tour pages for unauthenticated
+    # visitors. See P0 audit T001 RESCOPE for context.
     uploads_dir = Path(__file__).resolve().parents[1] / "uploads" / "tours"
     uploads_dir.mkdir(parents=True, exist_ok=True)
     app.mount("/api/uploads/tours", StaticFiles(directory=str(uploads_dir)), name="tour_uploads")

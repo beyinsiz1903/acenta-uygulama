@@ -127,10 +127,15 @@ class AdvancedReportsService:
         rows = await db.reservations.aggregate(pipeline).to_list(50)
 
         # Enrich with product titles
+        # Defensive org_id filter: even though product_ids come from
+        # reservations already scoped to org_id above, we re-pin here so a
+        # cross-tenant data corruption event cannot leak product titles.
         product_ids = [r["_id"] for r in rows if r["_id"]]
         products = {}
         if product_ids:
-            async for p in db.products.find({"_id": {"$in": product_ids}}):
+            async for p in db.products.find(
+                {"_id": {"$in": product_ids}, "organization_id": org_id}
+            ):
                 products[str(p["_id"])] = p.get("title", "")
 
         result = []

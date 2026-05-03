@@ -19,12 +19,9 @@ export default function AgencySearchResultsPage() {
   const searchId = searchParams.get("search_id");
 
   useEffect(() => {
-    console.log("[SearchResults] search_id:", searchId);
-    console.log("[SearchResults] searchData from state:", searchData);
   }, [searchId, searchData]);
 
   function handleSelectRoom(roomTypeId, ratePlanId) {
-    console.log("[SearchResults] Room selected:", { searchId, roomTypeId, ratePlanId });
     
     setLoading(true);
     

@@ -70,10 +70,23 @@ async def list_approvals(
     return [serialize_doc(d) for d in docs]
 
 
-async def get_approval(approval_id: str) -> Optional[Dict[str, Any]]:
-    """Get a single approval request."""
+async def get_approval(
+    approval_id: str,
+    organization_id: Optional[str] = None,
+) -> Optional[Dict[str, Any]]:
+    """Get a single approval request.
+
+    When ``organization_id`` is supplied the lookup is tenant-scoped so a
+    caller can rely on this function to enforce isolation rather than doing
+    a post-hoc check that may be skipped by mistake. Existing callers that
+    omit the parameter still get the previous (unscoped) behaviour, but new
+    integrations should always pass the requesting user's organization_id.
+    """
     db = await get_db()
-    doc = await db.approval_requests.find_one({"_id": approval_id})
+    query: Dict[str, Any] = {"_id": approval_id}
+    if organization_id:
+        query["organization_id"] = organization_id
+    doc = await db.approval_requests.find_one(query)
     return serialize_doc(doc) if doc else None
 
 

@@ -114,7 +114,13 @@ async def list_backups(skip: int = 0, limit: int = 50) -> list[dict[str, Any]]:
 
 
 async def delete_backup(backup_id: str) -> bool:
-    """Delete a backup file and its DB record."""
+    """Delete a backup file and its DB record.
+
+    NOTE: ``system_backups`` is intentionally a platform-wide collection
+    (no per-tenant scoping) — backups are infrastructure-level operations
+    restricted to super_admin via the calling router. Authorisation must
+    happen at the router layer; this helper performs the file/DB removal.
+    """
     db = await get_db()
     doc = await db.system_backups.find_one({"_id": backup_id})
     if not doc:

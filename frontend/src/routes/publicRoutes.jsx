@@ -23,6 +23,12 @@ const PricingPage = lazy(() => import("../pages/public/PricingPage"));
 const DemoPage = lazy(() => import("../pages/public/DemoPage"));
 const BillingSuccessPage = lazy(() => import("../pages/public/BillingSuccessPage"));
 const WebBookingPage = lazy(() => import("../pages/WebBookingPage"));
+// Test/QA-only pages — gated to non-production builds via DEV/import.meta.env.
+// In production these import shells exist but the routes below are not mounted,
+// so the lazy chunks are never fetched.
+const IS_DEV =
+  (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.DEV) ||
+  (typeof process !== "undefined" && process.env && process.env.NODE_ENV !== "production");
 const AgencyBookingTestPage = lazy(() => import("../pages/AgencyBookingTestPage"));
 const SimpleBookingTest = lazy(() => import("../pages/SimpleBookingTest"));
 const PrivacyPolicyPage = lazy(() => import("../pages/PrivacyPolicyPage"));
@@ -39,8 +45,8 @@ export const publicRoutes = (
     <Route path="/s/:tenantKey/checkout" element={<StorefrontCheckoutPage />} />
     <Route path="/privacy" element={<PrivacyPolicyPage />} />
     <Route path="/terms" element={<TermsOfServicePage />} />
-    <Route path="/test/booking" element={<AgencyBookingTestPage />} />
-    <Route path="/test/simple" element={<SimpleBookingTest />} />
+    {IS_DEV && <Route path="/test/booking" element={<AgencyBookingTestPage />} />}
+    {IS_DEV && <Route path="/test/simple" element={<SimpleBookingTest />} />}
     <Route path="/booking" element={<WebBookingPage />} />
     <Route path="/pay/:token" element={<PublicClickToPayPage />} />
     <Route path="/book" element={<BookSearchPage />} />

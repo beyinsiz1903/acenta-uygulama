@@ -11,6 +11,7 @@ Manages:
 from __future__ import annotations
 
 import logging
+import os
 from datetime import datetime, timezone, timedelta
 from typing import Any
 
@@ -66,9 +67,15 @@ FEEDBACK_QUESTIONS = [
     {"id": "comments", "question": "Ek yorumlariniz", "type": "text"},
 ]
 
+# Support channel addresses are environment-driven so launch comms can be
+# updated without a redeploy. Falls back to documented placeholders only when
+# the env var is unset (prevents leaking literal "XXX" strings to end users).
+_SUPPORT_EMAIL = os.environ.get("SYROCE_SUPPORT_EMAIL", "destek@syroce.com")
+_SUPPORT_WHATSAPP = os.environ.get("SYROCE_SUPPORT_WHATSAPP", "+90 850 000 0000")
+
 SUPPORT_CHANNELS = [
-    {"channel": "email", "address": "destek@syroce.com", "hours": "7/24", "response_sla": "4 saat"},
-    {"channel": "whatsapp", "address": "+90 555 XXX XXXX", "hours": "09:00-22:00", "response_sla": "30 dakika"},
+    {"channel": "email", "address": _SUPPORT_EMAIL, "hours": "7/24", "response_sla": "4 saat"},
+    {"channel": "whatsapp", "address": _SUPPORT_WHATSAPP, "hours": "09:00-22:00", "response_sla": "30 dakika"},
     {"channel": "documentation", "url": "/docs", "hours": "7/24", "response_sla": "Self-service"},
     {"channel": "faq", "url": "/faq", "hours": "7/24", "response_sla": "Self-service"},
 ]

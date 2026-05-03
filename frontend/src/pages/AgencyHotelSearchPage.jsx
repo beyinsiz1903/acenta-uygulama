@@ -166,12 +166,10 @@ export default function AgencyHotelSearchPage() {
         currency: "TRY",
       };
 
-      console.log("[AgencyHotelSearch] Search payload:", payload);
 
       const resp = await api.post("/agency/search", payload);
       const searchData = resp.data;
 
-      console.log("[AgencyHotelSearch] Search response:", searchData);
 
       // Canonical key for frontend-only cache hint (aynı kriterlerle tekrar aramada)
       const key = JSON.stringify(payload);

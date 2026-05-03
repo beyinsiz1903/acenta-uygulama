@@ -11,6 +11,7 @@ from app.auth import get_current_user, require_roles
 from app.db import get_db
 from app.errors import AppError
 from app.services.endpoint_cache import try_cache_get, cache_and_return
+from app.services.fx import FXService
 
 router = APIRouter(prefix="/api/b2b", tags=["b2b-hotels-search"])
 
@@ -149,6 +150,25 @@ async def search_b2b_hotels(
 
     occ = SearchOccupancy(adults=adults, children=children)
 
+    # FX rate cache: resolve once per requested quote currency to avoid
+    # N database lookups inside the rate-plan loop. Missing rates fall back
+    # to 1:1 so the search endpoint never hard-fails on FX gaps.
+    fx_service = FXService(db)
+    fx_cache: dict[str, float] = {"EUR": 1.0}
+
+    async def _fx_rate(quote: str) -> float:
+        q = (quote or "EUR").upper()
+        if q in fx_cache:
+            return fx_cache[q]
+        try:
+            rate = await fx_service.get_rate(org_id, q)
+            fx_cache[q] = float(rate.rate)
+        except Exception:
+            # Treat any FX lookup failure (missing rate, transient error)
+            # as a graceful 1:1 conversion rather than failing the search.
+            fx_cache[q] = 1.0
+        return fx_cache[q]
+
     items: List[HotelSearchResponseItem] = []
     for rp in rate_plans:
         prod = prod_map.get(rp["product_id"])
@@ -161,11 +181,17 @@ async def search_b2b_hotels(
             # Skip non-priced plans for P0.2
             continue
 
-        # Naive P0.2 pricing: per-night base_net * nights, then 10% markup placeholder
         base_total = round(base_net * nights, 2)
-        selling_currency = currency or base_currency
-        # FX integration TODO: for now, assume 1:1 if different currency requested
-        sell_total = round(base_total * 1.1, 2)
+        selling_currency = (currency or base_currency).upper()
+        # FX: rate plans are stored in EUR (base). When the caller asks for a
+        # different selling currency we apply the org-scoped FX rate plus a
+        # 10% markup. Same-currency requests skip conversion entirely.
+        if selling_currency == base_currency.upper():
+            converted = base_total
+        else:
+            rate = await _fx_rate(selling_currency)
+            converted = base_total * rate
+        sell_total = round(converted * 1.1, 2)
 
         items.append(
             HotelSearchResponseItem(

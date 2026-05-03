@@ -77,11 +77,6 @@ export default function AgencyHotelsPage() {
 
   useEffect(() => {
     // Debug: agency_id kontrolü
-    console.log("[AgencyHotelsPage] User context:", {
-      email: user?.email,
-      agency_id: user?.agency_id,
-      roles: user?.roles,
-    });
 
     loadHotels();
 
@@ -98,7 +93,6 @@ export default function AgencyHotelsPage() {
     setError("");
     try {
       const resp = await api.get("/agency/hotels");
-      console.log("[AgencyHotelsPage] Loaded hotels:", resp.data);
       const items = resp.data?.items || resp.data || [];
       setHotels(items);
     } catch (err) {

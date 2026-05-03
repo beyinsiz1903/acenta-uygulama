@@ -208,10 +208,19 @@ async def handle_stripe_webhook(raw_body: bytes, signature: str | None) -> Tuple
                 obj = event.get("data", {}).get("object", {})
                 metadata = obj.get("metadata") or {}
                 booking_id = metadata.get("booking_id")
+                # Stripe metadata carries organization_id when the checkout
+                # session was created via the multi-tenant flow. Pass it
+                # through so the side-effect helper performs a tenant-pinned
+                # booking lookup (defence in depth against ID collisions).
+                organization_id = metadata.get("organization_id") or metadata.get("org_id")
                 if booking_id:
-                    from app.services.b2c_post_payment import run_b2c_post_payment_side_effects
+                    from app.services.b2c_post_payment import run_b2c_post_payment_side_effects  # noqa: E501
 
-                    await run_b2c_post_payment_side_effects(db, booking_id=str(booking_id))
+                    await run_b2c_post_payment_side_effects(
+                        db,
+                        booking_id=str(booking_id),
+                        organization_id=str(organization_id) if organization_id else None,
+                    )
         except Exception:
             pass
 

@@ -77,8 +77,9 @@ async def approve(
     request: Request = None,
 ):
     """Approve a pending request. Admin only."""
-    # Check current state first
-    existing = await get_approval(approval_id)
+    # Check current state first — query is tenant-scoped to enforce isolation
+    # at the data layer (defence in depth on top of the post-fetch check).
+    existing = await get_approval(approval_id, organization_id=user["organization_id"])
     if not existing:
         raise HTTPException(status_code=404, detail="Approval request not found")
     if existing.get("status") != "pending":
@@ -87,7 +88,9 @@ async def approve(
             detail=f"Cannot approve: current status is '{existing.get('status')}'",
         )
 
-    # Verify org isolation
+    # Belt-and-braces: this can no longer trigger because the lookup is
+    # tenant-scoped, but we keep the explicit check for clarity and as a
+    # safety net if the helper signature ever changes.
     if existing.get("organization_id") != user["organization_id"]:
         raise HTTPException(status_code=403, detail="Cross-tenant access forbidden")
 
@@ -127,7 +130,7 @@ async def reject(
     request: Request = None,
 ):
     """Reject a pending request. Admin only."""
-    existing = await get_approval(approval_id)
+    existing = await get_approval(approval_id, organization_id=user["organization_id"])
     if not existing:
         raise HTTPException(status_code=404, detail="Approval request not found")
     if existing.get("status") != "pending":
@@ -136,6 +139,7 @@ async def reject(
             detail=f"Cannot reject: current status is '{existing.get('status')}'",
         )
 
+    # Defensive recheck (lookup is already tenant-scoped above).
     if existing.get("organization_id") != user["organization_id"]:
         raise HTTPException(status_code=403, detail="Cross-tenant access forbidden")
 

@@ -51,7 +51,16 @@ def _get_all_router_files() -> set[str]:
 
 
 def _get_module_imported_routers() -> dict[str, set[str]]:
-    """Parse each module __init__.py and extract imported router file names."""
+    """Parse each module __init__.py and extract imported router file names.
+
+    Returns imports as:
+      - "X.py"             → legacy `from app.routers.X` (lives in app/routers/)
+      - "<domain>/X.py"    → module-local `from app.modules.<domain>.routers.X`
+                              (lives in app/modules/<domain>/routers/)
+
+    Distinguishing the two prevents false-positive duplicates when two domains
+    each have their own internal `routers/onboarding.py` (they are different files).
+    """
     result = {}
     for init_file in sorted(MODULES_DIR.glob("*/__init__.py")):
         domain = init_file.parent.name
@@ -67,15 +76,15 @@ def _get_module_imported_routers() -> dict[str, set[str]]:
             elif (ROUTERS_DIR / router_name).is_dir():
                 imports.add(router_name)
 
-        # Match: from app.modules.{domain}.routers.XXX import ... (post-migration)
-        for match in re.finditer(r"from app\.modules\.\w+\.routers\.(\w+)", content):
-            router_name = match.group(1)
-            # Check both new location and shim existence
-            module_routers_dir = MODULES_DIR / domain / "routers"
-            if (module_routers_dir / f"{router_name}.py").exists():
-                imports.add(f"{router_name}.py")
-            if (ROUTERS_DIR / f"{router_name}.py").exists():
-                imports.add(f"{router_name}.py")
+        # Match: from app.modules.{src_domain}.routers.XXX import ...
+        # Tracked as "<src_domain>/X.py" so that two domains owning their own
+        # internal `routers/X.py` are NOT treated as duplicates of one shared file.
+        # Legacy `app/routers/X.py` shims are credited via the registry-import path,
+        # not here.
+        for match in re.finditer(r"from app\.modules\.(\w+)\.routers\.(\w+)", content):
+            src_domain = match.group(1)
+            router_name = match.group(2)
+            imports.add(f"{src_domain}/{router_name}.py")
 
         result[domain] = imports
     return result
@@ -104,8 +113,17 @@ def test_imported_routers_exist():
 
     for domain, imports in module_imports.items():
         for imp in imports:
-            if imp not in all_router_files and imp not in ROUTER_SUBPACKAGES:
-                missing.append(f"[{domain}] imports '{imp}' but file not found")
+            if "/" in imp:
+                # Module-local: "<src_domain>/X.py" must exist in app/modules/<src_domain>/routers/
+                src_domain, fname = imp.split("/", 1)
+                module_routers_dir = MODULES_DIR / src_domain / "routers"
+                if not (module_routers_dir / fname).exists():
+                    missing.append(
+                        f"[{domain}] imports module-local '{imp}' but file not found"
+                    )
+            else:
+                if imp not in all_router_files and imp not in ROUTER_SUBPACKAGES:
+                    missing.append(f"[{domain}] imports '{imp}' but file not found")
 
     if missing:
         pytest.fail(

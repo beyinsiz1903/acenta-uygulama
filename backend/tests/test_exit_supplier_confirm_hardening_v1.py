@@ -99,7 +99,10 @@ async def test_confirm_timeout_enforced_returns_upstream_timeout(test_db: Any, a
             retryable=True,
         )
 
-    monkeypatch.setattr("app.routers.b2b_bookings.run_with_deadline", fake_run_with_deadline)
+    monkeypatch.setattr(
+        "app.modules.b2b.routers.b2b_bookings_confirm.run_with_deadline",
+        fake_run_with_deadline,
+    )
 
     headers = {
         "Authorization": f"Bearer {token}",

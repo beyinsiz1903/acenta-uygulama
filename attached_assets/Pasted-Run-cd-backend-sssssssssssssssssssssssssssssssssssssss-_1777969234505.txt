@@ -1,0 +1,162 @@
+Run cd backend
+sssssssssssssssssssssssssssssssssssssss................................. [  2%]
+......ssssssssssssssssssssssssssssssssssssssssssss..sssssssss........... [  5%]
+..............ssssssssss............s...........................ssssssss [  8%]
+sssssssssssssssssssssss...............sssssssssssssssssssssssssssss..... [ 11%]
+....................ssssssssssssssssssssssssssssssssssssssssssssssssssss [ 14%]
+ssssssssssssssss..................ssssssssssssssssssssssssssssssssssssss [ 17%]
+s...ssssssssssssssss.................................................... [ 20%]
+..................................s...ssss.s......sss.........F
+=================================== FAILURES ===================================
+____________ test_confirm_timeout_enforced_returns_upstream_timeout ____________
+
+obj = <module 'app.modules.b2b.routers.b2b_bookings' from '/home/runner/work/acenta-uygulama/acenta-uygulama/backend/app/modules/b2b/routers/b2b_bookings.py'>
+name = 'run_with_deadline', ann = 'app.routers.b2b_bookings'
+
+    def annotated_getattr(obj: object, name: str, ann: str) -> object:
+        try:
+>           obj = getattr(obj, name)
+                  ^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'app.modules.b2b.routers.b2b_bookings' has no attribute 'run_with_deadline'
+
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/_pytest/monkeypatch.py:92: AttributeError
+
+The above exception was the direct cause of the following exception:
+
+test_db = AsyncIOMotorDatabase(Database(MongoClient(host=['localhost:27017'], document_class=dict, tz_aware=False, connect=False...10000, driver=DriverInfo(name='Motor', version='3.3.1', platform='asyncio')), 'agentis_test_58e29382d82d4dc6851c6c44'))
+async_client = <httpx.AsyncClient object at 0x7f23ace87050>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f23a4431e50>
+
+    @pytest.mark.exit_confirm_timeout_enforced
+    @pytest.mark.anyio
+    async def test_confirm_timeout_enforced_returns_upstream_timeout(test_db: Any, async_client: AsyncClient, monkeypatch: Any) -> None:
+        """Confirm should enforce timeout via run_with_deadline and surface upstream_timeout.
+    
+        We monkeypatch run_with_deadline (as imported in the router module) to raise
+        SupplierAdapterError(upstream_timeout, retryable=True) and verify the endpoint
+        returns 502 with the correct error payload.
+        """
+    
+        from app.services.suppliers.contracts import SupplierAdapterError
+    
+        client: AsyncClient = async_client
+        now = now_utc()
+    
+        org = await test_db.organizations.insert_one(
+            {"name": "HARDEN Org1", "slug": "harden_org1", "created_at": now, "updated_at": now}
+        )
+        org_id = str(org.inserted_id)
+    
+        tenant = await test_db.tenants.insert_one(
+            {
+                "tenant_key": "harden-tenant-1",
+                "organization_id": org_id,
+                "brand_name": "Harden Tenant 1",
+                "primary_domain": "harden-tenant-1.example.com",
+                "subdomain": "harden-tenant-1",
+                "theme_config": {},
+                "is_active": True,
+                "created_at": now,
+                "updated_at": now,
+            }
+        )
+        tenant_id = str(tenant.inserted_id)
+    
+        email = "harden1@example.com"
+        await test_db.users.insert_one(
+            {
+                "organization_id": org_id,
+                "email": email,
+                "roles": ["agency_agent"],
+                "is_active": True,
+                "created_at": now,
+                "updated_at": now,
+            }
+        )
+        token = jwt.encode({"sub": email, "org": org_id}, _jwt_secret(), algorithm="HS256")
+    
+        booking_doc = {
+            "organization_id": org_id,
+            "state": "draft",
+            "status": "PENDING",
+            "source": "b2b_marketplace",
+            "currency": "TRY",
+            "amount": 100.0,
+            "offer_ref": {
+                "source": "marketplace",
+                "listing_id": "dummy",
+                "seller_tenant_id": tenant_id,
+                "buyer_tenant_id": tenant_id,
+                "supplier": "mock_supplier_v1",
+                "supplier_offer_id": "MOCK-TIMEOUT-1",
+            },
+            "created_at": now,
+            "updated_at": now,
+        }
+        res = await test_db.bookings.insert_one(booking_doc)
+        booking_id = str(res.inserted_id)
+    
+        async def fake_run_with_deadline(coro, ctx):
+            # Close the original coroutine to avoid ResourceWarning
+            coro.close()
+            raise SupplierAdapterError(
+                code="upstream_timeout",
+                message="Supplier confirm timed out",
+                retryable=True,
+            )
+    
+>       monkeypatch.setattr("app.routers.b2b_bookings.run_with_deadline", fake_run_with_deadline)
+
+tests/test_exit_supplier_confirm_hardening_v1.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/_pytest/monkeypatch.py:106: in derive_importpath
+    annotated_getattr(target, attr, ann=module)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+obj = <module 'app.modules.b2b.routers.b2b_bookings' from '/home/runner/work/acenta-uygulama/acenta-uygulama/backend/app/modules/b2b/routers/b2b_bookings.py'>
+name = 'run_with_deadline', ann = 'app.routers.b2b_bookings'
+
+    def annotated_getattr(obj: object, name: str, ann: str) -> object:
+        try:
+            obj = getattr(obj, name)
+        except AttributeError as e:
+>           raise AttributeError(
+                f"{type(obj).__name__!r} object at {ann} has no attribute {name!r}"
+            ) from e
+E           AttributeError: 'module' object at app.routers.b2b_bookings has no attribute 'run_with_deadline'
+
+/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/_pytest/monkeypatch.py:94: AttributeError
+=============================== warnings summary ===============================
+../../../../../../opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/formparsers.py:12
+  /opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/formparsers.py:12: PendingDeprecationWarning: Please use `import python_multipart` instead.
+    import multipart
+
+app/services/booking_service.py:7
+  /home/runner/work/acenta-uygulama/acenta-uygulama/backend/app/services/booking_service.py:7: DeprecationWarning: app.domain.booking_state_machine is deprecated. Use app.modules.booking.models instead.
+    from app.domain.booking_state_machine import validate_transition
+
+app/services/reservations.py:9
+  /home/runner/work/acenta-uygulama/acenta-uygulama/backend/app/services/reservations.py:9: DeprecationWarning: app.constants.booking_statuses is deprecated. Use app.modules.booking.models instead.
+    from app.constants.booking_statuses import can_transition, get_status_label
+
+app/schemas_b2b_cancel.py:14
+  /home/runner/work/acenta-uygulama/acenta-uygulama/backend/app/schemas_b2b_cancel.py:14: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    @validator("requested_refund_amount")
+
+tests/test_tenant_isolation.py:46
+  /home/runner/work/acenta-uygulama/acenta-uygulama/backend/tests/test_tenant_isolation.py:46: PytestCollectionWarning: cannot collect test class 'TestBookingRepo' because it has a __init__ constructor (from: tests/test_tenant_isolation.py)
+    class TestBookingRepo(TenantScopedRepository):
+
+tests/test_tenant_isolation.py:50
+  /home/runner/work/acenta-uygulama/acenta-uygulama/backend/tests/test_tenant_isolation.py:50: PytestCollectionWarning: cannot collect test class 'TestPaymentRepo' because it has a __init__ constructor (from: tests/test_tenant_isolation.py)
+    class TestPaymentRepo(TenantScopedRepository):
+
+tests/test_api_v1_auth_aliases.py::test_legacy_auth_endpoints_publish_successor_headers
+  /opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1859: DeprecationWarning: Setting per-request cookies=<...> is being deprecated, because the expected behaviour on cookie persistence is ambiguous. Set cookies directly on the client instance instead.
+    return await self.request(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_exit_supplier_confirm_hardening_v1.py::test_confirm_timeout_enforced_returns_upstream_timeout - AttributeError: 'module' object at app.routers.b2b_bookings has no attribute 'run_with_deadline'
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+Error: Process completed with exit code 1.

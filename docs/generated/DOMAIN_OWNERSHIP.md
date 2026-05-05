@@ -1,5 +1,5 @@
 # Domain Ownership Map
-> Auto-generated: 2026-04-17 18:18 UTC
+> Auto-generated: 2026-05-05 08:21 UTC
 > Source: `app/modules/*/` structure and `__init__.py` imports
 
 | Domain | Router Count | Has Dedicated Routers Dir | Docstring |

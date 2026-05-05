@@ -1,0 +1,91 @@
+10m 24s
+Run cd backend
+sssssssssssssssssssssssssssssssssssssss................................. [  2%]
+......ssssssssssssssssssssssssssssssssssssssssssss..sssssssss........... [  5%]
+..............ssssssssss............s...........................ssssssss [  8%]
+sssssssssssssssssssssss...............sssssssssssssssssssssssssssss..... [ 11%]
+....................ssssssssssssssssssssssssssssssssssssssssssssssssssss [ 14%]
+ssssssssssssssss..................ssssssssssssssssssssssssssssssssssssss [ 17%]
+s...ssssssssssssssss.................................................... [ 20%]
+..................................s...ssss.s......sss................... [ 22%]
+......................ssssssssssssssssssssssssssssssssssssssssssssssssss [ 25%]
+ssssssssssssssssssssssssssssss................ssssssssssssssssssssssssss [ 28%]
+sssssssssssssssssssssssssssssssssssssss.ssssssssssssssssssssssssssssssss [ 31%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 34%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 37%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 40%]
+sssssssssssssss.......sssssssssss.....................ssssssssssssssssss [ 43%]
+sssssssssssssssssssssssssssssssssssssssssssssssssss.....xsssssssssssssss [ 45%]
+sssssssssssssss..............ssssssssssssssssssssssssss........X......x. [ 48%]
+...........................................xx......sssssssssssssssssssss [ 51%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 54%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 57%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 60%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 63%]
+sssssssssssss....sssssssssssssssssssssssssssssssssss.................... [ 66%]
+..............x.F
+=================================== FAILURES ===================================
+_______________________ test_rate_limit_headers_present ________________________
+
+async_client = <httpx.AsyncClient object at 0x7f651569e590>
+admin_token = '***'
+
+    @pytest.mark.anyio
+    async def test_rate_limit_headers_present(async_client, admin_token):
+        """Test that rate limit policy headers are added to responses."""
+        headers = {"Authorization": f"***"}
+        resp = await async_client.get("/api/auth/me", headers=headers)
+        assert resp.status_code == 200
+        # Global rate limit check adds this header
+>       assert "x-ratelimit-policy" in resp.headers, \
+            "X-RateLimit-Policy header should be present"
+E       AssertionError: X-RateLimit-Policy header should be present
+E       assert 'x-ratelimit-policy' in Headers({'content-length': '629', 'content-type': 'application/json', 'deprecation': 'true', 'link': '</api/v1/auth/me..., 'x-api-version': 'v1', 'x-api-deprecated': 'true', 'x-api-sunset': '2026-09-01', 'x-api-upgrade': '/api/v1/auth/me'})
+E        +  where Headers({'content-length': '629', 'content-type': 'application/json', 'deprecation': 'true', 'link': '</api/v1/auth/me..., 'x-api-version': 'v1', 'x-api-deprecated': 'true', 'x-api-sunset': '2026-09-01', 'x-api-upgrade': '/api/v1/auth/me'}) = <Response [200 OK]>.headers
+
+tests/test_rate_limiting.py:50: AssertionError
+=============================== warnings summary ===============================
+../../../../../../opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/formparsers.py:12
+  /opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/starlette/formparsers.py:12: PendingDeprecationWarning: Please use `import python_multipart` instead.
+    import multipart
+
+app/services/booking_service.py:7
+  /home/runner/work/acenta-uygulama/acenta-uygulama/backend/app/services/booking_service.py:7: DeprecationWarning: app.domain.booking_state_machine is deprecated. Use app.modules.booking.models instead.
+    from app.domain.booking_state_machine import validate_transition
+
+app/services/reservations.py:9
+  /home/runner/work/acenta-uygulama/acenta-uygulama/backend/app/services/reservations.py:9: DeprecationWarning: app.constants.booking_statuses is deprecated. Use app.modules.booking.models instead.
+    from app.constants.booking_statuses import can_transition, get_status_label
+
+app/schemas_b2b_cancel.py:14
+  /home/runner/work/acenta-uygulama/acenta-uygulama/backend/app/schemas_b2b_cancel.py:14: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    @validator("requested_refund_amount")
+
+tests/test_tenant_isolation.py:46
+  /home/runner/work/acenta-uygulama/acenta-uygulama/backend/tests/test_tenant_isolation.py:46: PytestCollectionWarning: cannot collect test class 'TestBookingRepo' because it has a __init__ constructor (from: tests/test_tenant_isolation.py)
+    class TestBookingRepo(TenantScopedRepository):
+
+tests/test_tenant_isolation.py:50
+  /home/runner/work/acenta-uygulama/acenta-uygulama/backend/tests/test_tenant_isolation.py:50: PytestCollectionWarning: cannot collect test class 'TestPaymentRepo' because it has a __init__ constructor (from: tests/test_tenant_isolation.py)
+    class TestPaymentRepo(TenantScopedRepository):
+
+tests/test_api_v1_auth_aliases.py::test_legacy_auth_endpoints_publish_successor_headers
+  /opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/httpx/_client.py:1859: DeprecationWarning: Setting per-request cookies=<...> is being deprecated, because the expected behaviour on cookie persistence is ambiguous. Set cookies directly on the client instance instead.
+    return await self.request(
+
+tests/test_partner_api_v1.py::test_partner_happy_path_search_quote_booking_docs
+tests/test_public_checkout_api.py::test_public_checkout_idempotency_key_conflict_code_and_correlation
+  /home/runner/work/acenta-uygulama/acenta-uygulama/backend/app/services/stripe_adapter.py:57: DeprecationWarning: 
+          StripeClient.payment_intents is deprecated, use StripeClient.v1.payment_intents instead.
+            All functionality under it has been copied over to StripeClient.v1.payment_intents.
+            See [migration guide](https://github.com/stripe/stripe-python/wiki/v1-namespace-in-StripeClient) for more on this and tips on migrating to the new v1 namespace.
+          
+    pi = client.payment_intents.create(**kwargs, headers=headers)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_rate_limiting.py::test_rate_limit_headers_present - AssertionError: X-RateLimit-Policy header should be present
+assert 'x-ratelimit-policy' in Headers({'content-length': '629', 'content-type': 'application/json', 'deprecation': 'true', 'link': '</api/v1/auth/me..., 'x-api-version': 'v1', 'x-api-deprecated': 'true', 'x-api-sunset': '2026-09-01', 'x-api-upgrade': '/api/v1/auth/me'})
+ +  where Headers({'content-length': '629', 'content-type': 'application/json', 'deprecation': 'true', 'link': '</api/v1/auth/me..., 'x-api-version': 'v1', 'x-api-deprecated': 'true', 'x-api-sunset': '2026-09-01', 'x-api-upgrade': '/api/v1/auth/me'}) = <Response [200 OK]>.headers
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+Error: Process completed with exit code 1.

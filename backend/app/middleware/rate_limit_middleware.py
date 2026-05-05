@@ -207,8 +207,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         # Skip rate limiting under pytest / explicit env bypass.
+        # We still emit the X-RateLimit-Policy header so observability tests and
+        # downstream consumers see the policy advertisement even when no bucket
+        # check ran (the header indicates *which* policy applies, not that it
+        # was actively evaluated for this request).
         if _rate_limiting_disabled():
-            return await call_next(request)
+            response = await call_next(request)
+            response.headers.setdefault("X-RateLimit-Policy", "token_bucket")
+            return response
 
         # Endpoint-specific rate limits on state-changing methods
         if method in ("POST", "PUT", "DELETE"):

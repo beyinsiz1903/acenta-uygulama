@@ -150,7 +150,23 @@ def create_app() -> FastAPI:
             import logging
             logging.getLogger("startup").warning("Outbox indexes: %s", exc)
 
+        # Start Syroce PMS B2B ARI consumer (Channel B). No-op if unconfigured.
+        try:
+            from app.services.syroce_b2b.ari_consumer import start_ari_consumer
+            start_ari_consumer()
+        except Exception as exc:
+            import logging
+            logging.getLogger("startup").warning("Syroce B2B ARI consumer start: %s", exc)
+
         yield
+
+        # Stop Syroce PMS B2B ARI consumer.
+        try:
+            from app.services.syroce_b2b.ari_consumer import stop_ari_consumer
+            await stop_ari_consumer()
+        except Exception:
+            pass
+
         shutdown_runtime_resources()
         # Shutdown Redis
         try:

@@ -1,0 +1,72 @@
+GOREV: Mevcut acente otomasyon uygulamasini, Syroce PMS'in B2B backend'ine baglayacak
+entegrasyonu TAMAMLA. PMS yetkili (authoritative) taraftir ve sozlesme KILITLIDIR;
+sadece bizim uygulama tarafindaki eksik baglanti uclarini tamamla. Once mevcut kodda
+asagidaki uclarin var olup olmadigini kontrol et, eksik/yanlis olanlari ekle/duzelt.
+
+ORTAM (Secrets olarak tut, ASLA log'lama / istemciye sizdirma):
+- SYROCE_B2B_BASE_URL   = https://<pms-domain>/api/b2b
+- SYROCE_AGENCY_API_KEY = <syroce_b2b_...>
+- SYROCE_TENANT_ID      = <tenant_id>
+- SYROCE_AGENCY_ID      = <agency_id>
+- SYROCE_REDIS_URL      = redis://<ozel-ag-host>:6379   (public degil)
+
+KIMLIK & GUVENLIK
+- Her REST cagrisina `X-API-Key: <SYROCE_AGENCY_API_KEY>` basligi ekle.
+- POST /reservations'a HER ZAMAN istemci uretimli `Idempotency-Key: <uuid>` ekle.
+- Cikis IP'si sabit olmali; PMS ingress'inde IP allowlist + istemci mTLS zorunlu.
+- Tum yazma yollarinda idempotent ve fail-closed ol (belirsizlikte islemi reddet,
+  asla sessizce basarili sayma). Hicbir gizli anahtari log'lama.
+
+KANAL A — REST (base: SYROCE_B2B_BASE_URL; tarihler YYYY-MM-DD)
+- GET  /availability?check_in&check_out[&room_type]
+    -> { check_in, check_out, room_types:[{room_type,capacity,base_price,amenities,
+         bed_type,total_rooms,available_rooms}] }
+- GET  /rates?start_date&end_date[&room_type]   (acenteye ozel fiyat takvimi)
+- POST /reservations   (Idempotency-Key zorunlu)
+    govde: { room_type, check_in, check_out, guest_name, guest_email?, guest_phone?,
+             adults, children, special_requests?, total_amount? }   (total_amount=0 ise PMS hesaplar)
+    basari 200: { ok:true, reservation:{ id, confirmation_code:"B2B-XXXXXXXX", status,
+                  room_type, room_number, check_in, check_out, guest_name, total_amount,
+                  commission_rate, commission_amount, created_at }, message }
+- GET  /reservations?status&check_in_from&check_in_to&limit   (limit<=500; sadece kendi rezervasyonlarin)
+- GET  /reservations/{id}
+- PUT  /reservations/{id}/cancel
+- (Opsiyonel, scope'a tabi: /folio/{booking_id}, /guests/*, /groups/*, /housekeeping/*,
+   /kbs/*, /identity/*, /lost-found, /wake-up-calls, /guest-journey/*, /webhooks*.
+   Tam liste PMS /api/openapi.json'da.)
+
+IDEMPOTENCY DAVRANISI (kritik — istemci tarafinda dogru kur)
+- Ayni key + ayni govde -> ikinci rezervasyon olusmaz; orijinal yanit aynen replay edilir.
+- Ayni key + FARKLI govde -> 409.
+- Ayni key su an isleniyor -> 429 + Retry-After:2 -> bekle, AYNI key ile tekrar dene.
+- Is-kurali 4xx kalicidir (retry ayni hatayi alir); beklenmeyen 5xx AYNI key ile guvenle retry.
+
+HATA KODLARI
+- 401 key eksik/gecersiz/pasif (retry yok) · 403 acente pasif veya scope yetersiz (retry yok)
+- 402 kredi limiti asildi · 409 idempotency-farkli-govde / kontenjan dolu / oda cakismasi
+- 422 gecersiz govde veya allowed_room_types disi oda tipi · 429 in-flight (Retry-After bekle)
+- 5xx gecici (ayni Idempotency-Key ile retry)
+
+IS KURALLARI (PMS zorlar — istemci bilmeli)
+- Kontenjan (allotment) ODA-GECE bazinda tuketilir: rezervasyon `oda * gece` birim duser
+  (3 gecelik tek-oda = 3 birim). Sozlesmede tanimliysa asilamaz -> 409. Tanimsizsa sinirsiz.
+- Kredi: tanimliysa current_debt + tutar <= credit_limit degilse -> 402.
+- allowed_room_types disindaki oda tipi -> 422.
+
+KANAL B — Redis Streams (PMS -> acente, gercek zamanli ARI)
+- SADECE kendi stream'ini oku: b2b:tenant:{SYROCE_TENANT_ID}:agency:{SYROCE_AGENCY_ID}:ari:v1
+  (Redis'e yalnizca ozel ag uzerinden eris.)
+- Consumer group ile tuket:
+    XGROUP CREATE <stream> agency-consumers $ MKSTREAM
+    XREADGROUP GROUP agency-consumers <consumer> COUNT 100 BLOCK 5000 STREAMS <stream> >
+    isle -> XACK <stream> agency-consumers <id>
+    Yeniden baglanmada pending'i ID 0 ile oku + periyodik XAUTOCLAIM. Boylece son ACK'ten devam edersin.
+- Mesaj alanlari schema="ari.v1": event_id, event_type(availability|rate|restriction),
+  room_type_code, rate_plan_code, date_from, date_to, payload(JSON, orn. {"price":1200,
+  "currency":"TRY","stop_sale":false}), created_at, ...
+- AT-LEAST-ONCE: ayni event_id birden cok gelebilir. (room_type_code, date_from..date_to)
+  anahtariyla idempotent uygula, created_at ile sirala (last-write-wins). Yerel musaitlik/
+  fiyat/stop-sale tablonu bu olaylarla guncelle.
+
+GENEL: PMS yetkilidir, cakismada PMS kazanir. Kontrat additive/geriye-uyumlu; degisiklik
+olursa stream schema surumlenir (ari.v1 -> ari.v2).

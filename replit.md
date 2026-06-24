@@ -237,3 +237,45 @@ The shared Atlas free-tier cluster (`syroce.no04m9w.mongodb.net`) is at **500/50
 
 ### Deferred (future sprints)
 T005 system/ split, T006 huge page splits, T007 per-tenant rate limit, T008 self-service export UI, T009 stripe/b2b refactors, T012 lazy router loading, T013 stub page polish. See `.local/session_plan.md`.
+
+## Syroce PMS B2B Agency Integration (Scenario B)
+
+Agency-side client that connects THIS app to the authoritative Syroce PMS B2B
+backend as a channel-manager-style consumer. **Separate Replit project model**:
+the agency cannot reach the PMS Redis, so this is intentionally NOT the
+Redis-Streams ARI design.
+
+- **Security**: `X-API-Key` ONLY (no mTLS / IP allowlist).
+- **Real-time**: inbound webhook subscription + REST polling into a local
+  last-write-wins table (`syroce_b2b_local_ari`). No Redis Streams.
+- **Onboarding (approval-gated)**: `POST /api/b2b/connect-requests` (with
+  `X-Connect-Code` + `agency_platform_request_id` idempotency) returns
+  `request_id`+`request_token` once; poll `GET /api/b2b/connect-requests/{id}`
+  (with `X-Connect-Code` + `X-Request-Token`) until approved to fetch the
+  one-time `api_key`. Credentials are encrypted at rest and never returned/logged.
+
+| Component | Path |
+|-----------|------|
+| Config (base_url + tenant_id from env) | `backend/app/services/syroce_b2b/config.py` |
+| Encrypted single-doc credential store (`syroce_b2b_connection`) | `connection_store.py` |
+| Onboarding flow | `onboarding.py` |
+| Idempotency-Key resolver (`syroce_b2b_idempotency`) | `idempotency.py` |
+| REST client (availability/rates/reservations/folio/webhooks) | `client.py` |
+| Inbound webhook HMAC verify + record (`syroce_b2b_webhook_events`) | `webhooks.py` |
+| Public inbound receiver `POST /api/b2b-agency/webhook` | `webhook_routes.py` |
+| Polling service (lifespan-managed, self-gating) | `polling.py` |
+| Admin router `/api/admin/syroce-b2b/*` | `backend/app/modules/inventory/routers/syroce_b2b.py` |
+
+- **Write safety**: ambiguous failures (timeout/network/5xx) auto-retry ONLY for
+  GET or keyed writes; keyless writes fail closed. `429` honours `Retry-After` and
+  retries the same request. `{400,401,402,403,404,409,422}` are permanent.
+  `POST /reservations` carries a stable `Idempotency-Key` (caller key wins;
+  invalid caller key → 422; else `client_request_id` → persisted key; else
+  generated + echoed).
+- **Env**: needs `SYROCE_B2B_BASE_URL`, `SYROCE_TENANT_ID`, and
+  `SYROCE_KEY_ENCRYPTION_KEY` (Fernet). The old `SYROCE_AGENCY_API_KEY/AGENCY_ID/
+  REDIS_URL` secrets are obsolete under Scenario B (api_key comes from onboarding;
+  env key is fallback only).
+- **Lifespan**: `start_polling()` / `stop_polling()` (replaced the removed
+  `ari_consumer.py`). The marketplace proxy (`app/services/syroce/*`) is a separate
+  feature and untouched.

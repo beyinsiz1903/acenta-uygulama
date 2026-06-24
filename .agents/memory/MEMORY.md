@@ -1,0 +1,3 @@
+- [Syroce B2B Scenario B](syroce-b2b-scenario-b.md) — agency↔PMS integration is X-API-Key only + webhook/polling (NO Redis Streams); onboarding-gated key.
+- [Idempotent write retry safety](idempotent-write-retry-safety.md) — only retry ambiguous failures (timeout/network/5xx) for GET or keyed writes; keyless writes fail closed.
+- [Backend pytest infra blocker](backend-pytest-infra.md) — Atlas 500-collection cap + slow boot make pytest unreliable here; verify logic via standalone asyncio scripts.

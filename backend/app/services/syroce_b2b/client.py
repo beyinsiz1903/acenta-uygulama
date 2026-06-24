@@ -1,9 +1,12 @@
-"""Channel A — Syroce PMS B2B REST client (agency side).
+"""Channel A — Syroce PMS B2B REST client (agency side, Scenario B).
 
-Contract-locked. Base URL = ``SYROCE_B2B_BASE_URL``; dates are ``YYYY-MM-DD``.
-Every request carries ``X-API-Key``. ``POST /reservations`` additionally carries
-a client-generated ``Idempotency-Key`` (UUID) that is REUSED across retries for
-the same logical reservation.
+Contract-locked. Base URL = ``SYROCE_B2B_BASE_URL`` (e.g. ``https://host/api/b2b``);
+dates are ``YYYY-MM-DD``. Every request carries ``X-API-Key``. The api_key is loaded
+from the connection store (populated by onboarding); an env ``SYROCE_AGENCY_API_KEY``
+is honoured only as a fallback.
+
+``POST /reservations`` additionally carries a client-generated ``Idempotency-Key``
+(UUID) that is REUSED across retries for the same logical reservation.
 
 Idempotency / retry semantics (client side):
   - same key + same body          -> PMS replays the original response.
@@ -20,11 +23,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import uuid
 from typing import Any, Dict, Optional
 
 import httpx
 
+from app.services.syroce_b2b import connection_store as store
 from app.services.syroce_b2b.config import SyroceB2BConfig, get_b2b_config
 from app.services.syroce_b2b.errors import PERMANENT_STATUS, SyroceB2BError
 
@@ -40,31 +43,39 @@ _BACKOFF_CAP = 8.0
 
 
 class SyroceB2BClient:
-    """Stateless REST client bound to the env-configured agency identity."""
+    """REST client bound to the configured base URL + a resolved agency api_key."""
 
-    def __init__(self, config: Optional[SyroceB2BConfig] = None, *, timeout: float = 25.0):
+    def __init__(self, *, api_key: str, config: Optional[SyroceB2BConfig] = None, timeout: float = 25.0):
         self._cfg = config or get_b2b_config()
+        self._api_key = api_key
         self._timeout = timeout
 
-    # ── internals ────────────────────────────────────────────────
-
-    def _require_ready(self) -> SyroceB2BConfig:
-        cfg = self._cfg
-        if not cfg.rest_ready:
-            # Fail-closed: never silently no-op a missing configuration.
+    @classmethod
+    async def load(cls, *, timeout: float = 25.0) -> "SyroceB2BClient":
+        """Build a client using the stored api_key (env fallback). Fail-closed."""
+        cfg = get_b2b_config()
+        if not cfg.base_ready:
             raise SyroceB2BError(
                 503,
-                "Syroce PMS B2B bağlantısı yapılandırılmamış "
-                "(SYROCE_B2B_BASE_URL / SYROCE_AGENCY_API_KEY / "
-                "SYROCE_TENANT_ID / SYROCE_AGENCY_ID eksik).",
+                "Syroce PMS B2B taban adresi yapılandırılmamış (SYROCE_B2B_BASE_URL eksik).",
                 code="not_configured",
                 retryable=False,
             )
-        return cfg
+        api_key = (await store.get_api_key()) or cfg.api_key_env
+        if not api_key:
+            raise SyroceB2BError(
+                503,
+                "Syroce PMS B2B bağlantısı kurulmamış — önce onboarding ile API key alın.",
+                code="not_connected",
+                retryable=False,
+            )
+        return cls(api_key=api_key, config=cfg, timeout=timeout)
+
+    # ── internals ────────────────────────────────────────────────
 
     def _headers(self, *, idempotency_key: Optional[str] = None) -> Dict[str, str]:
         headers = {
-            "X-API-Key": self._cfg.api_key,
+            "X-API-Key": self._api_key,
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
@@ -102,10 +113,17 @@ class SyroceB2BClient:
         json_body: Optional[Dict[str, Any]] = None,
         idempotency_key: Optional[str] = None,
     ) -> Dict[str, Any]:
-        cfg = self._require_ready()
-        url = f"{cfg.base_url}{path}"
+        url = f"{self._cfg.base_url}{path}"
         attempt = 0
         last_exc: Optional[SyroceB2BError] = None
+
+        # A transient failure (timeout / network error / 5xx) AFTER the request was
+        # sent is ambiguous — the write may or may not have been applied. Replaying
+        # it is only safe when the operation is idempotent: a GET, or a write that
+        # carries a stable Idempotency-Key the PMS dedups on. For any other write
+        # (keyless POST/PUT/PATCH/DELETE) we FAIL CLOSED and raise immediately
+        # rather than risk double-applying it.
+        retry_safe = method.upper() == "GET" or bool(idempotency_key)
 
         while attempt < _MAX_ATTEMPTS:
             attempt += 1
@@ -119,15 +137,18 @@ class SyroceB2BClient:
                         json=json_body,
                     )
             except httpx.TimeoutException as exc:
-                # Sent but no response: ambiguous. Safe to retry SAME key (GET is
-                # idempotent; POST is protected by the stable Idempotency-Key).
+                # Sent but no response: ambiguous. Retry only if idempotent.
                 last_exc = SyroceB2BError(504, f"Syroce PMS zaman aşımı: {exc}", code="timeout")
                 logger.warning("syroce_b2b timeout method=%s path=%s attempt=%d", method, path, attempt)
+                if not retry_safe:
+                    raise last_exc
                 await asyncio.sleep(self._backoff(attempt))
                 continue
             except httpx.RequestError as exc:
                 last_exc = SyroceB2BError(502, f"Syroce PMS erişilemedi: {exc}", code="unreachable")
                 logger.warning("syroce_b2b network error method=%s path=%s attempt=%d", method, path, attempt)
+                if not retry_safe:
+                    raise last_exc
                 await asyncio.sleep(self._backoff(attempt))
                 continue
 
@@ -156,10 +177,13 @@ class SyroceB2BClient:
             if status in PERMANENT_STATUS:
                 raise SyroceB2BError(status, detail, payload=payload, retryable=False)
 
-            # Unexpected 5xx: transient, retry with the SAME key.
+            # Unexpected 5xx: ambiguous. Retry with the SAME key only if idempotent;
+            # a keyless write fails closed (it may already have been applied).
             if status >= 500:
                 last_exc = SyroceB2BError(status, detail, payload=payload, retryable=True)
                 logger.warning("syroce_b2b 5xx path=%s status=%d attempt=%d", path, status, attempt)
+                if not retry_safe:
+                    raise last_exc
                 await asyncio.sleep(self._backoff(attempt))
                 continue
 
@@ -175,7 +199,7 @@ class SyroceB2BClient:
     def _backoff(attempt: int) -> float:
         return min(_BACKOFF_CAP, _BACKOFF_BASE * (2 ** (attempt - 1)))
 
-    # ── Channel A endpoints ──────────────────────────────────────
+    # ── Channel A: booking engine ────────────────────────────────
 
     async def get_availability(
         self, *, check_in: str, check_out: str, room_type: Optional[str] = None
@@ -193,16 +217,15 @@ class SyroceB2BClient:
             params["room_type"] = room_type
         return await self._request("GET", "/rates", params=params)
 
-    async def create_reservation(
-        self, body: Dict[str, Any], *, idempotency_key: Optional[str] = None
-    ) -> Dict[str, Any]:
-        """POST /reservations with a stable client-generated Idempotency-Key.
+    async def create_reservation(self, body: Dict[str, Any], *, idempotency_key: str) -> Dict[str, Any]:
+        """POST /reservations with a caller-resolved, stable Idempotency-Key.
 
-        Pass ``idempotency_key`` to reuse a previously persisted key (e.g. when
-        re-driving an uncertain attempt). Otherwise a fresh UUID is generated.
+        The key MUST be resolved/persisted by the caller (see ``idempotency.py``)
+        so logical retries reuse the same key. This method never invents one.
         """
-        key = idempotency_key or str(uuid.uuid4())
-        return await self._request("POST", "/reservations", json_body=body, idempotency_key=key)
+        if not idempotency_key:
+            raise SyroceB2BError(422, "Idempotency-Key zorunludur.", code="missing_idempotency_key", retryable=False)
+        return await self._request("POST", "/reservations", json_body=body, idempotency_key=idempotency_key)
 
     async def list_reservations(
         self,
@@ -226,6 +249,31 @@ class SyroceB2BClient:
 
     async def cancel_reservation(self, reservation_id: str) -> Dict[str, Any]:
         return await self._request("PUT", f"/reservations/{reservation_id}/cancel")
+
+    # ── Channel A: folio (scope: folio) ──────────────────────────
+
+    async def get_folio(self, booking_id: str) -> Dict[str, Any]:
+        return await self._request("GET", f"/folio/{booking_id}")
+
+    async def add_folio_charge(self, booking_id: str, charge: Dict[str, Any]) -> Dict[str, Any]:
+        return await self._request("POST", f"/folio/{booking_id}/charge", json_body=charge)
+
+    async def get_folio_invoice(self, booking_id: str) -> Dict[str, Any]:
+        return await self._request("GET", f"/folio/{booking_id}/invoice")
+
+    # ── Channel A: webhook subscriptions (scope: webhooks) ───────
+
+    async def register_webhook(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        return await self._request("POST", "/webhooks", json_body=body)
+
+    async def list_webhooks(self) -> Dict[str, Any]:
+        return await self._request("GET", "/webhooks")
+
+    async def delete_webhook(self, subscription_id: str) -> Dict[str, Any]:
+        return await self._request("DELETE", f"/webhooks/{subscription_id}")
+
+    async def test_webhook(self, subscription_id: str) -> Dict[str, Any]:
+        return await self._request("POST", f"/webhooks/{subscription_id}/test")
 
 
 __all__ = ["SyroceB2BClient"]

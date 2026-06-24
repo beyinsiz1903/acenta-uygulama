@@ -153,6 +153,12 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(customer_portal_router)
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # SYROCE B2B INBOUND WEBHOOK (public; PMS authenticates via signed body)
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    from app.services.syroce_b2b.webhook_routes import router as syroce_b2b_inbound_router
+    app.include_router(syroce_b2b_inbound_router)
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # V1 ALIASES (backward compatibility)
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     from app.bootstrap.v1_registry import register_v1_routers

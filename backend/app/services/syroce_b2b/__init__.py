@@ -1,18 +1,23 @@
-"""Syroce PMS B2B integration (agency/client side).
+"""Syroce PMS B2B integration (agency/client side) — Scenario B.
 
-This is the contract-locked, single-agency integration that connects THIS
-agency-automation app to the authoritative Syroce PMS B2B backend.
+Connects THIS agency-automation app to the authoritative Syroce PMS B2B backend
+as a channel-manager-style client. Security is **X-API-Key only**; the key is
+obtained through an approval-gated onboarding flow and stored encrypted.
 
-Two channels:
-  - Channel A (REST): synchronous availability/rates/reservations via
-    ``client.SyroceB2BClient`` — X-API-Key on every call, client-generated
-    Idempotency-Key on POST /reservations, full error-code + retry semantics.
-  - Channel B (Redis Streams): real-time ARI (availability/rate/restriction)
-    consumed from ``b2b:tenant:{TENANT}:agency:{AGENCY}:ari:v1`` via a consumer
-    group, applied idempotently (last-write-wins by created_at).
+Components:
+  - ``onboarding``      — approval-gated connect-request flow that retrieves the
+                          one-time API key (persisted, encrypted).
+  - ``client`` (Ch. A)  — REST: availability / rates / reservations / folio +
+                          webhook-subscription management. X-API-Key on every
+                          call; stable Idempotency-Key on POST /reservations.
+  - ``webhooks`` + ``webhook_routes`` — inbound signed-webhook receiver.
+  - ``polling``         — periodic REST polling of availability/rates into a local
+                          table (last-write-wins). The Scenario B real-time path.
+  - ``connection_store``— encrypted, single-doc credential/connection store.
 
-The PMS is authoritative; on any conflict the PMS wins. All write paths are
-fail-closed and idempotent. No secret is ever logged or returned to clients.
+Scenario A's Redis-Streams ARI consumer is intentionally absent: a separate Replit
+project cannot reach the PMS Redis. The PMS is authoritative; on conflict it wins.
+All write paths are fail-closed and idempotent. No secret is ever logged/returned.
 """
 from __future__ import annotations
 

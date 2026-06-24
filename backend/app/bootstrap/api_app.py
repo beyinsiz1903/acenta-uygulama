@@ -150,20 +150,21 @@ def create_app() -> FastAPI:
             import logging
             logging.getLogger("startup").warning("Outbox indexes: %s", exc)
 
-        # Start Syroce PMS B2B ARI consumer (Channel B). No-op if unconfigured.
+        # Start Syroce PMS B2B polling service (Scenario B real-time path).
+        # Self-gates: dormant until onboarded + polling enabled. No-op if no base URL.
         try:
-            from app.services.syroce_b2b.ari_consumer import start_ari_consumer
-            start_ari_consumer()
+            from app.services.syroce_b2b.polling import start_polling
+            start_polling()
         except Exception as exc:
             import logging
-            logging.getLogger("startup").warning("Syroce B2B ARI consumer start: %s", exc)
+            logging.getLogger("startup").warning("Syroce B2B polling start: %s", exc)
 
         yield
 
-        # Stop Syroce PMS B2B ARI consumer.
+        # Stop Syroce PMS B2B polling service.
         try:
-            from app.services.syroce_b2b.ari_consumer import stop_ari_consumer
-            await stop_ari_consumer()
+            from app.services.syroce_b2b.polling import stop_polling
+            await stop_polling()
         except Exception:
             pass
 

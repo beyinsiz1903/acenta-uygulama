@@ -1,0 +1,58 @@
+GÖREV: Syroce PMS'i yetkili (authoritative) iki-yönlü B2B backend kabul eden, AYRI bir
+"acente otomasyon uygulaması" kur ve geliştir. Bu uygulama PMS'e bir kanal yöneticisi
+(channel manager) gibi bağlanır: müsaitlik sorgular, fiyat alır, rezervasyon oluşturur/
+iptal eder, folio okur ve PMS'ten gelen gerçek-zaman ARI (availability/rate/stop-sale)
+değişimlerini kendi yerel envanterine işler.
+
+Bu kontrat KİLİTLİDİR. Uygulamayı bu sözleşmeye göre yaz; PMS tarafı additive ve
+geriye-uyumlu kalır. Tüm yazma yollarında idempotent ol, tüm hataları fail-closed işle,
+hiçbir gizli anahtarı log'lama/ekrana yazma.
+
+================================================================
+ORTAM KARARI (önce bunu belirle — transport ve güvenliği bu seçer)
+================================================================
+- A) PMS DigitalOcean'da ve uygulaman PMS ile özel ağ (VPC) paylaşıyor:
+     mTLS + sabit çıkış IP allowlist GEREKLİ; gerçek-zaman için Redis Streams (Kanal B)
+     KULLANILABİLİR.
+- B) PMS Replit VM'de ve/veya uygulaman ayrı bir Replit projesinde (VARSAYILAN):
+     PMS'in Redis'i dışarıdan ERİŞİLEMEZ ve mTLS/IP-allowlist zorlanMAZ. Güvenlik
+     yalnızca X-API-Key'tir. Gerçek-zaman için WEBHOOK ABONELİĞİ + REST POLLING kullan;
+     Redis Streams'i KURMA.
+Aksi söylenmedikçe B senaryosunu uygula.
+
+================================================================
+0. ONBOARDING — bağlantı & API key edinme (onay-kapılı, key OTEL ONAYI olmadan basılMAZ)
+================================================================
+Otelden out-of-band iki değer al:
+- Otel ID (tenant_id): otelin PMS Ayarlar > B2B Entegrasyon sekmesinde görünür.
+- Bağlantı Kodu (connect code): aynı sekmede "üret/yenile" ile alınır; ham değer
+  YALNIZCA o an BİR KEZ gösterilir. Düşük yetkilidir: sadece bağlantı isteği
+  oluşturabilir ve durum sorgulayabilir — key BASAMAZ.
+
+Adım 1 — bağlantı isteği oluştur:
+  POST /api/b2b/connect-requests            (JWT YOK; tenant koddan çözülür)
+  Başlık: X-Connect-Code: <bağlantı kodu>
+  Gövde (fazladan alan YASAK):
+  {
+    "agency_name": "Acente Adı",
+    "contact_name": "", "contact_email": "", "contact_phone": "",
+    "note": "", "external_agency_id": "",
+    "agency_platform_request_id": "<acente-tarafı-idempotency-id>",
+    "requested_scopes": ["booking_engine", "webhooks"]
+  }
+  Başarı (201) — request_token SADECE BURADA bir kez döner:
+  { "request_id": "<uuid>", "request_token": "<gizli>", "status": "pending", ... }
+  ZORUNLU: request_id + request_token İKİSİNİ DE kalıcı secret store'a yaz. Bunlar
+  olmadan durum sorgulanamaz ve key çekilemez.
+  Aynı agency_platform_request_id ile tekrar -> { "status": "...", "idempotent": true }
+  döner ve request_id/request_token İÇERMEZ; o yüzden ilk 201'den saklamış olmalısın.
+  Yanlış/eksik kod -> tek tip 401 (otel var/yok sızdırılmaz).
+
+Adım 2 — durum sorgula (poll) ve key'i tek seferlik çek:
+  GET /api/b2b/connect-requests/{request_id}
+  Başlıklar: X-Connect-Code: <kod>  VE  X-Request-Token: <201'den gelen token>
+  - pending:  { "status": "pending", "message": "Onay bekleniyor." }
+  - rejected: { "status": "rejected", "reason": "..." }
+  - approved + key hazır (İLK başarılı poll):
+      { "status": "approved", "api_key": "<ham key>", "agency_id": "...",
+        "scopes": ["booking_engine","webhooks"], "key

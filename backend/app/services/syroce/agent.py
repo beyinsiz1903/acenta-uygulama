@@ -166,6 +166,12 @@ class SyroceAgentClient:
     async def get_reservation(self, reservation_id: str) -> Dict[str, Any]:
         return await self._request("GET", f"/reservations/{reservation_id}")
 
+    async def list_reservations_for_reconciliation(self, *, tenant_id: str, check_in: str) -> Dict[str, Any]:
+        return await self._request("GET", "/reservations", params={
+            "tenant_id": tenant_id, "check_in_from": check_in,
+            "check_in_to": check_in, "limit": 500,
+        })
+
     async def cancel_reservation(self, reservation_id: str, *, reason: str = "agency_request") -> Dict[str, Any]:
         return await self._request("DELETE", f"/reservations/{reservation_id}", params={"reason": reason})
 

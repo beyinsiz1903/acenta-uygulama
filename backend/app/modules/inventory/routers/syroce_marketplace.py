@@ -301,7 +301,7 @@ async def create_reservation(body: CreateReservationPayload, user: dict = UserDe
             raise AppError(
                 502, "reservation_outcome_unknown",
                 "PMS rezervasyon sonucu doğrulanamadı. Aynı rezervasyonu yeni PNR ile göndermeyin; "
-                "mevcut PNR ile PMS kaydını kontrol edin.",
+                "mevcut PNR otomatik olarak PMS üzerinden kontrol edilecek.",
                 details={"external_reference": external_ref, "reservation_id": record_id,
                          "reconciliation_required": True},
             )

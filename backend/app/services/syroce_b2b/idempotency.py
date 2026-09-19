@@ -51,13 +51,14 @@ async def resolve_key(
         if existing and existing.get("idempotency_key"):
             return existing["idempotency_key"]
         key = str(uuid.uuid4())
-        await _remember(client_request_id, key)
-        return key
+        # Another request may have inserted the mapping after our read.
+        # Always return the persisted winner, never our losing candidate.
+        return await _remember(client_request_id, key)
 
     return str(uuid.uuid4())
 
 
-async def _remember(client_request_id: str, key: str) -> None:
+async def _remember(client_request_id: str, key: str) -> str:
     db = await get_db()
     from datetime import datetime, timezone
 
@@ -71,6 +72,10 @@ async def _remember(client_request_id: str, key: str) -> None:
         },
         upsert=True,
     )
+    saved = await db[COLLECTION].find_one({"_id": client_request_id})
+    if not saved or not saved.get("idempotency_key"):
+        raise RuntimeError("Reservation idempotency mapping was not persisted")
+    return saved["idempotency_key"]
 
 
 __all__ = ["resolve_key", "is_valid_key", "COLLECTION"]

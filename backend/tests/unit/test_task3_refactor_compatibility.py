@@ -219,6 +219,44 @@ def test_no_method_name_collisions_across_stripe_mixins():
 EXPECTED_ROUTE_COUNT = 1598
 EXPECTED_ROUTE_HASH = "ecdaf3ab57f42363c84e2ff2e8fc5617"
 
+# Added after the Task #3 baseline by the Syroce B2B integration. Keep the
+# original hash intact so unrelated route removals/renames cannot be hidden by
+# merely refreshing a global count/hash. Each addition must occur exactly once.
+SYROCE_B2B_ROUTE_SIGNATURES = (
+    "['GET'] /api/admin/syroce-b2b/status",
+    "['POST'] /api/admin/syroce-b2b/connect",
+    "['POST'] /api/admin/syroce-b2b/connect/poll",
+    "['POST'] /api/admin/syroce-b2b/rotate-key",
+    "['GET'] /api/admin/syroce-b2b/availability",
+    "['GET'] /api/admin/syroce-b2b/rates",
+    "['POST'] /api/admin/syroce-b2b/reservations",
+    "['GET'] /api/admin/syroce-b2b/reservations",
+    "['GET'] /api/admin/syroce-b2b/reservations/{reservation_id}",
+    "['PUT'] /api/admin/syroce-b2b/reservations/{reservation_id}/cancel",
+    "['GET'] /api/admin/syroce-b2b/folio/{booking_id}",
+    "['POST'] /api/admin/syroce-b2b/folio/{booking_id}/charge",
+    "['GET'] /api/admin/syroce-b2b/folio/{booking_id}/invoice",
+    "['POST'] /api/admin/syroce-b2b/webhooks",
+    "['GET'] /api/admin/syroce-b2b/webhooks",
+    "['DELETE'] /api/admin/syroce-b2b/webhooks/{subscription_id}",
+    "['POST'] /api/admin/syroce-b2b/webhooks/{subscription_id}/test",
+    "['PUT'] /api/admin/syroce-b2b/polling/settings",
+    "['POST'] /api/admin/syroce-b2b/polling/sync",
+    "['GET'] /api/admin/syroce-b2b/local-ari",
+    "['POST'] /api/b2b-agency/webhook",
+)
+
+
+def _legacy_route_signatures(sigs):
+    legacy = list(sigs)
+    for signature in SYROCE_B2B_ROUTE_SIGNATURES:
+        assert legacy.count(signature) == 1, (
+            f"Expected exactly one Syroce B2B route: {signature}; "
+            f"found {legacy.count(signature)}"
+        )
+        legacy.remove(signature)
+    return legacy
+
 
 def test_route_inventory_unchanged_by_task3_refactor():
     from app.bootstrap.api_app import app
@@ -228,17 +266,38 @@ def test_route_inventory_unchanged_by_task3_refactor():
         f"{r.path if hasattr(r, 'path') else ''}"
         for r in app.routes
     )
+    sigs = _legacy_route_signatures(sigs)
     actual_count = len(sigs)
     actual_hash = hashlib.md5("\n".join(sigs).encode()).hexdigest()
 
     assert actual_count == EXPECTED_ROUTE_COUNT, (
         f"Route count drifted: expected {EXPECTED_ROUTE_COUNT}, got {actual_count}. "
-        "A route was added or removed by the refactor."
+        "A route outside the explicitly recorded B2B additions was added or removed."
     )
     assert actual_hash == EXPECTED_ROUTE_HASH, (
         f"Route signature hash drifted: expected {EXPECTED_ROUTE_HASH}, "
         f"got {actual_hash}. A route's method or path was changed."
     )
+
+
+def test_route_baseline_removes_only_recorded_additions():
+    legacy = ["['GET'] /legacy", "['POST'] /unexpected-new-route"]
+    assert _legacy_route_signatures(legacy + list(SYROCE_B2B_ROUTE_SIGNATURES)) == legacy
+
+
+@pytest.mark.parametrize("mutation", ["missing", "duplicate", "renamed", "method_changed"])
+def test_route_baseline_rejects_b2b_surface_drift(mutation):
+    sigs = list(SYROCE_B2B_ROUTE_SIGNATURES)
+    if mutation == "missing":
+        sigs.pop()
+    elif mutation == "duplicate":
+        sigs.append(sigs[-1])
+    elif mutation == "renamed":
+        sigs[-1] += "-changed"
+    else:
+        sigs[-1] = sigs[-1].replace("POST", "GET")
+    with pytest.raises(AssertionError, match="Expected exactly one Syroce B2B route"):
+        _legacy_route_signatures(sigs)
 
 
 # ---------------------------------------------------------------------------

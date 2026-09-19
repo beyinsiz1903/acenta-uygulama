@@ -3,13 +3,32 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiErrorMessage } from "../../lib/api";
 import { CalendarCheck, Eye, X, Trash2, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 
-function StatusBadge({ status }) {
+function StatusBadge({ status, reconciliationRequired }) {
+  if (reconciliationRequired) {
+    return <span className="px-2 py-0.5 text-xs rounded bg-amber-100 text-amber-900">PMS kontrolü gerekli</span>;
+  }
   const map = {
     confirmed: "bg-emerald-100 text-emerald-800",
     cancelled: "bg-red-100 text-red-800",
     completed: "bg-blue-100 text-blue-800",
+    pending: "bg-amber-100 text-amber-900",
   };
-  return <span className={`px-2 py-0.5 text-xs rounded ${map[status] || "bg-gray-100 text-gray-700"}`}>{status || "-"}</span>;
+  const labels = { confirmed: "Onaylı", cancelled: "İptal", completed: "Tamamlandı", pending: "Onay bekleniyor" };
+  return <span className={`px-2 py-0.5 text-xs rounded ${map[status] || "bg-gray-100 text-gray-700"}`}>{labels[status] || status || "-"}</span>;
+}
+
+function PendingNotice({ reservation }) {
+  if (reservation?.status !== "pending" && !reservation?.reconciliation_required) return null;
+  return (
+    <div role="note" className="flex items-start gap-2 p-3 rounded border bg-amber-50 border-amber-200 text-amber-900">
+      <AlertTriangle size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
+      <div className="text-sm">
+        <p className="font-semibold">Rezervasyon sonucu henüz doğrulanmadı.</p>
+        <p>PNR: <span className="font-mono">{reservation.external_reference || "-"}</span>. Otelden bu PNR ile PMS kaydını kontrol etmesini isteyin. Aynı rezervasyonu yeni PNR ile tekrar göndermeyin.</p>
+        <p className="mt-1">Bu ekran otomatik eşleştirme yapmaz; onay durumu netleşene kadar iptal işlemi kullanılamaz.</p>
+      </div>
+    </div>
+  );
 }
 
 function Banner({ kind, children, onClose }) {
@@ -73,6 +92,7 @@ export default function MarketplaceReservationsPage() {
           <select className="border rounded px-3 py-2 text-sm" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <option value="">Tümü</option>
             <option value="confirmed">Onaylı</option>
+            <option value="pending">Onay bekleyen / kontrol gerekli</option>
             <option value="cancelled">İptal</option>
             <option value="completed">Tamamlandı</option>
           </select>
@@ -111,12 +131,17 @@ export default function MarketplaceReservationsPage() {
                 <td className="px-3 py-2">{r.guest_name}<div className="text-xs text-gray-500">{r.guest_email}</div></td>
                 <td className="px-3 py-2 text-xs">{r.check_in} → {r.check_out}</td>
                 <td className="px-3 py-2 text-right">{r.total_amount != null ? `${Number(r.total_amount).toFixed(2)} TRY` : "-"}</td>
-                <td className="px-3 py-2 text-center"><StatusBadge status={r.status} /></td>
+                <td className="px-3 py-2 text-center">
+                  <StatusBadge status={r.status} reconciliationRequired={r.reconciliation_required} />
+                  {(r.status === "pending" || r.reconciliation_required) && (
+                    <div className="text-xs text-amber-800 mt-1">Yeni PNR ile tekrar göndermeyin. Detaydan kontrol bilgilerini açın.</div>
+                  )}
+                </td>
                 <td className="px-3 py-2 text-right whitespace-nowrap">
                   <button onClick={() => detailMut.mutate(r.id)} className="text-blue-600 hover:bg-blue-50 p-1 rounded" title="Detay">
                     <Eye size={16} />
                   </button>
-                  {r.status !== "cancelled" && (
+                  {r.status !== "cancelled" && r.status !== "pending" && !r.reconciliation_required && r.syroce_reservation_id && (
                     <button onClick={() => { setCancelTarget(r); setCancelReason("agency_request"); }} className="text-red-600 hover:bg-red-50 p-1 rounded ml-1" title="İptal Et">
                       <Trash2 size={16} />
                     </button>
@@ -137,6 +162,7 @@ export default function MarketplaceReservationsPage() {
               <button onClick={() => setDetail(null)} className="text-gray-400 hover:text-gray-700"><X /></button>
             </div>
             <div className="p-4 space-y-3 text-sm">
+              <PendingNotice reservation={detail.local} />
               <div>
                 <div className="font-semibold mb-1">Yerel Kayıt</div>
                 <pre className="bg-gray-50 border rounded p-2 text-xs overflow-x-auto">{JSON.stringify(detail.local, null, 2)}</pre>

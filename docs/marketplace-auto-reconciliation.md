@@ -43,8 +43,23 @@ Records retain last check, next check, attempt count and last outcome. A bounded
 history retains the last 20 check outcomes in the same atomic update. No guest
 data, remote error body or API key is written into that history.
 
-Validation uses mocked HTTP and database/client doubles; it does not establish
-real Mongo concurrency or live PMS compatibility. Before release, verify a timed-out
-successful booking, two simultaneous workers, lease expiry/restart, mismatched
-organization, duplicate PNR, a missing ledger entry and loss of PMS connectivity
-against a test environment. No PMS code or deployment is changed by this feature.
+Unit validation uses mocked HTTP and database/client doubles. Six additional
+integration tests passed against an isolated local MongoDB 8.3.4 process: concurrent
+claims, stale ownership, normal-handler completion, expired leases, cancelled-task
+recovery, retry cooldown and bounded history. These tests still mock PMS lookup;
+they do not establish live PMS compatibility or validate the complete API lifespan.
+
+Run the isolated integration suite from the repository root:
+
+```sh
+PYTHONPATH=backend python3 -m pytest --noconftest -q backend/tests/integration/test_marketplace_reconciliation_mongo.py
+```
+
+It requires `mongod` on PATH (otherwise the tests explicitly skip), starts its own
+localhost-only server with temporary storage, and terminates only that child
+process. It never uses application environment database URLs. The `--noconftest`
+flag avoids the repository's shared application/database test setup.
+
+Before release, verify a timed-out successful booking, mismatched organization,
+duplicate PNR, a missing ledger entry and loss of PMS connectivity with the real
+PMS in a test environment. No PMS code or deployment is changed by this feature.

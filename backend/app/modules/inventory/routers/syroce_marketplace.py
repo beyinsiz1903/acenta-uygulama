@@ -263,6 +263,21 @@ async def create_reservation(body: CreateReservationPayload, user: dict = UserDe
             {"organization_id": org_id, "external_reference": external_ref}
         )
         if existing and existing.get("status") in ("confirmed", "completed"):
+            # A reused PNR is only a successful replay for the same booking.
+            # Ignore display metadata (hotel name/user), not reservation inputs.
+            booking_fields = (
+                "syroce_tenant_id", "room_type", "check_in", "check_out",
+                "guest_name", "guest_email", "guest_phone", "adults", "children",
+            )
+            if (
+                any(existing.get(field) != pending_doc[field] for field in booking_fields)
+                or (existing.get("special_requests") or "") != pending_doc["special_requests"]
+            ):
+                raise AppError(
+                    409, "external_reference_conflict",
+                    "Bu PNR farklı rezervasyon bilgileriyle kayıtlı. "
+                    "Mevcut rezervasyonu kontrol edin; yeni talep onaylanmadı.",
+                )
             return {"ok": True, "reservation": _serialize(existing), "idempotent": True}
         raise AppError(
             409, "duplicate_external_reference",

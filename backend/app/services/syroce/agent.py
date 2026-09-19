@@ -167,7 +167,10 @@ class SyroceAgentClient:
         return await self._request("GET", f"/reservations/{reservation_id}")
 
     async def cancel_reservation(self, reservation_id: str, *, reason: str = "agency_request") -> Dict[str, Any]:
-        return await self._request("DELETE", f"/reservations/{reservation_id}", params={"reason": reason})
+        result = await self._request("DELETE", f"/reservations/{reservation_id}", params={"reason": reason})
+        if result.get("ok") is not True:
+            raise SyroceError(502, "PMS iptal onayı doğrulanamadı; işlem sonucunu PMS üzerinden kontrol edin.")
+        return result
 
     async def reconciliation(
         self, *, period_start: str, period_end: str, tenant_id: Optional[str] = None,

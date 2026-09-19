@@ -405,6 +405,8 @@ async def cancel_local_reservation(
         raise AppError(404, "not_found", "Rezervasyon bulunamadı.")
     if local.get("status") == "cancelled":
         raise AppError(409, "already_cancelled", "Bu rezervasyon zaten iptal edilmiş.")
+    if local.get("status") == "pending" or local.get("reconciliation_required"):
+        raise AppError(409, "reconciliation_pending", "PMS sonucu doğrulanmadan iptal işlemi yapılamaz.")
     pms_id = local.get("syroce_reservation_id")
     if not pms_id:
         raise AppError(409, "missing_pms_id", "Bu kayıt PMS'te tanımlı değil; iptal edilemez.")

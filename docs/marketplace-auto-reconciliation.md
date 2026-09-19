@@ -37,6 +37,25 @@ whose creation succeeded but whose marketplace ledger write failed; it stays
 unresolved for investigation. It does not reconcile ambiguous cancellation of an
 already-confirmed local record, or continuously synchronize all confirmed records.
 
+## Reservation screen
+
+The visible reservation list refreshes every 30 seconds. Pending detail views
+also refresh every 30 seconds and stop polling once resolved. Closing the page
+does not stop the server worker. The detail notice shows last check, earliest next
+attempt and an explanation of lookup failure or an unresolved result. List fetch
+errors are not displayed as an empty successful list.
+
+Pending or reconciliation-required records cannot be cancelled through the UI or
+the cancellation API, even if they already contain a PMS ID. The API returns 409
+`reconciliation_pending` before loading credentials or sending a PMS request.
+
+Page render tests use isolated React Query/state doubles (not browser interaction
+or a production build). With frontend dependencies installed, run from frontend:
+
+```sh
+node --test tests/marketplace-reconciliation-view.test.cjs
+```
+
 ## Traceability and validation
 
 Records retain last check, next check, attempt count and last outcome. A bounded

@@ -229,6 +229,8 @@ async def create_reservation(body: CreateReservationPayload, user: dict = UserDe
     await _ensure_indexes(db)
     org_id = _org_id(user)
 
+    # Resolve configuration before claiming a local reservation slot.
+    client = await _client(user)
     external_ref = (body.external_reference or "").strip() or f"ACT-{uuid.uuid4().hex[:8].upper()}"
 
     # Idempotency: claim the (org, external_reference) slot BEFORE PMS call.
@@ -283,10 +285,26 @@ async def create_reservation(body: CreateReservationPayload, user: dict = UserDe
         pms_payload["special_requests"] = body.special_requests
     # NOTE: total_amount intentionally NOT sent — server-side price is authoritative.
 
-    client = await _client(user)
     try:
         result = await client.create_reservation(pms_payload)
     except SyroceError as exc:
+        if exc.http_status >= 500 or exc.http_status == 408:
+            # A timeout or invalid response does not prove that PMS rejected
+            # the booking. Retain the unique reference to block a second send.
+            try:
+                await db[COLLECTION].update_one(
+                    {"organization_id": org_id, "id": record_id, "status": "pending"},
+                    {"$set": {"reconciliation_required": True, "updated_at": _now()}},
+                )
+            except Exception:
+                logger.exception("failed to mark pending reservation for reconciliation")
+            raise AppError(
+                502, "reservation_outcome_unknown",
+                "PMS rezervasyon sonucu doğrulanamadı. Aynı rezervasyonu yeni PNR ile göndermeyin; "
+                "mevcut PNR ile PMS kaydını kontrol edin.",
+                details={"external_reference": external_ref, "reservation_id": record_id,
+                         "reconciliation_required": True},
+            )
         try:
             await db[COLLECTION].delete_one(
                 {"organization_id": org_id, "id": record_id, "status": "pending"}
@@ -304,8 +322,8 @@ async def create_reservation(body: CreateReservationPayload, user: dict = UserDe
         "room_type": reservation.get("room_type") or body.room_type,
         "room_number": reservation.get("room_number"),
         "total_amount": reservation.get("total_amount"),
-        "commission_rate": reservation.get("agency_commission_rate"),
-        "commission_amount": reservation.get("agency_commission_amount"),
+        "commission_rate": reservation.get("commission_pct", reservation.get("agency_commission_rate")),
+        "commission_amount": reservation.get("commission_amount", reservation.get("agency_commission_amount")),
         "net_to_hotel": reservation.get("net_to_hotel"),
         "status": reservation.get("status") or "confirmed",
         "raw_response": result,

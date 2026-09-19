@@ -24,7 +24,10 @@ def _base_url() -> str:
     url = os.environ.get("SYROCE_BASE_URL", "").rstrip("/")
     if not url:
         raise SyroceError(500, "SYROCE_BASE_URL ortam değişkeni tanımlı değil.")
-    return url
+    # Accept both the PMS origin and the existing full marketplace base.
+    # Every public method below uses a path relative to this one prefix.
+    prefix = "/api/marketplace/v1"
+    return url if url.endswith(prefix) else f"{url}{prefix}"
 
 
 class SyroceAgentClient:
@@ -95,6 +98,9 @@ class SyroceAgentClient:
             logger.warning("syroce agent network error org=%s path=%s err=%s", self.organization_id, path, exc)
             raise SyroceError(502, f"Syroce API erişilemedi: {exc}") from exc
 
+        if 300 <= resp.status_code < 400:
+            raise SyroceError(502, "Syroce API beklenmeyen yönlendirme döndürdü.")
+
         try:
             data = resp.json() if resp.content else {}
         except Exception:
@@ -136,15 +142,26 @@ class SyroceAgentClient:
         return await self._request("POST", "/search", json_body=payload)
 
     async def get_rates(self, *, tenant_id: str, room_type: str, check_in: str, check_out: str) -> Dict[str, Any]:
-        return await self._request("GET", "/rates", params={
-            "tenant_id": tenant_id,
+        return await self._request("GET", f"/hotels/{tenant_id}/rates", params={
             "room_type": room_type,
-            "check_in": check_in,
-            "check_out": check_out,
+            "start_date": check_in,
+            "end_date": check_out,
         })
 
     async def create_reservation(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-        return await self._request("POST", "/reservations", json_body=payload, timeout=30.0)
+        result = await self._request("POST", "/reservations", json_body=payload, timeout=30.0)
+        reservation = result.get("reservation")
+        if (
+            result.get("ok") is not True
+            or not isinstance(reservation, dict)
+            or not isinstance(reservation.get("id"), str)
+            or not reservation["id"].strip()
+            or reservation.get("status") != "confirmed"
+            or reservation.get("tenant_id") != payload.get("tenant_id")
+            or reservation.get("external_reference") != payload.get("external_reference")
+        ):
+            raise SyroceError(502, "PMS rezervasyon onayı doğrulanamadı; işlem sonucunu kontrol edin.")
+        return result
 
     async def get_reservation(self, reservation_id: str) -> Dict[str, Any]:
         return await self._request("GET", f"/reservations/{reservation_id}")
@@ -164,19 +181,19 @@ class SyroceAgentClient:
 
     async def propose_contract(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Propose a new contract to a hotel (target tenant)."""
-        return await self._request("POST", "/api/marketplace/v1/contracts/propose", json_body=payload, timeout=30.0)
+        return await self._request("POST", "/contracts/propose", json_body=payload, timeout=30.0)
 
     async def list_contracts(self, *, status: Optional[str] = None) -> Dict[str, Any]:
         """List all contracts proposed by this agency, optionally filtered by status."""
         params: Dict[str, Any] = {}
         if status:
             params["status"] = status
-        return await self._request("GET", "/api/marketplace/v1/contracts/mine", params=params or None)
+        return await self._request("GET", "/contracts/mine", params=params or None)
 
     async def get_contract(self, contract_id: str) -> Dict[str, Any]:
         """Get a single contract's status and details."""
-        return await self._request("GET", f"/api/marketplace/v1/contracts/{contract_id}")
+        return await self._request("GET", f"/contracts/{contract_id}")
 
     async def withdraw_contract(self, contract_id: str) -> Dict[str, Any]:
         """Withdraw a pending contract proposal."""
-        return await self._request("DELETE", f"/api/marketplace/v1/contracts/{contract_id}")
+        return await self._request("DELETE", f"/contracts/{contract_id}")

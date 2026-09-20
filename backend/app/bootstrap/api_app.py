@@ -159,7 +159,19 @@ def create_app() -> FastAPI:
             import logging
             logging.getLogger("startup").warning("Syroce B2B polling start: %s", exc)
 
-        yield
+        # Marketplace recovery uses each organization's own credentials and
+        # performs GET-only PMS lookups. Start automatically, cancel on shutdown.
+        import asyncio
+        from contextlib import suppress
+        from app.services.syroce.reconciliation import run as reconcile_marketplace
+
+        reconciliation_task = asyncio.create_task(reconcile_marketplace())
+        try:
+            yield
+        finally:
+            reconciliation_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await reconciliation_task
 
         # Stop Syroce PMS B2B polling service.
         try:

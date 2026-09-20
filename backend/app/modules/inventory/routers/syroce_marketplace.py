@@ -301,7 +301,7 @@ async def create_reservation(body: CreateReservationPayload, user: dict = UserDe
             raise AppError(
                 502, "reservation_outcome_unknown",
                 "PMS rezervasyon sonucu doğrulanamadı. Aynı rezervasyonu yeni PNR ile göndermeyin; "
-                "mevcut PNR ile PMS kaydını kontrol edin.",
+                "mevcut PNR otomatik olarak PMS üzerinden kontrol edilecek.",
                 details={"external_reference": external_ref, "reservation_id": record_id,
                          "reconciliation_required": True},
             )
@@ -405,6 +405,8 @@ async def cancel_local_reservation(
         raise AppError(404, "not_found", "Rezervasyon bulunamadı.")
     if local.get("status") == "cancelled":
         raise AppError(409, "already_cancelled", "Bu rezervasyon zaten iptal edilmiş.")
+    if local.get("status") == "pending" or local.get("reconciliation_required"):
+        raise AppError(409, "reconciliation_pending", "PMS sonucu doğrulanmadan iptal işlemi yapılamaz.")
     pms_id = local.get("syroce_reservation_id")
     if not pms_id:
         raise AppError(409, "missing_pms_id", "Bu kayıt PMS'te tanımlı değil; iptal edilemez.")

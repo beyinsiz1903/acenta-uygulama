@@ -3,13 +3,34 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, apiErrorMessage } from "../../lib/api";
 import { CalendarCheck, Eye, X, Trash2, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 
-function StatusBadge({ status }) {
+function StatusBadge({ status, reconciliationRequired }) {
   const map = {
     confirmed: "bg-emerald-100 text-emerald-800",
     cancelled: "bg-red-100 text-red-800",
     completed: "bg-blue-100 text-blue-800",
+    pending: "bg-amber-100 text-amber-900",
   };
-  return <span className={`px-2 py-0.5 text-xs rounded ${map[status] || "bg-gray-100 text-gray-700"}`}>{status || "-"}</span>;
+  const labels = { confirmed: "Onaylı", cancelled: "İptal", completed: "Tamamlandı", pending: "PMS onayı bekleniyor" };
+  return <span className={`px-2 py-0.5 text-xs rounded ${map[status] || "bg-gray-100 text-gray-700"}`}>{reconciliationRequired ? "PMS sonucu belirsiz" : labels[status] || status || "-"}</span>;
+}
+
+function ReconciliationNotice({ reservation }) {
+  if (reservation?.status !== "pending" && !reservation?.reconciliation_required) return null;
+  const formatTime = (value) => {
+    if (!value) return "Henüz yok";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "Bilinmiyor" : date.toLocaleString("tr-TR");
+  };
+  return (
+    <div role="note" className="rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+      <p className="font-semibold">PMS sonucu henüz doğrulanmadı.</p>
+      <p>Bekleyen kayıtlar sunucuda otomatik kontrol edilir. Aynı rezervasyonu yeni PNR ile tekrar göndermeyin.</p>
+      <p>Son kontrol: {formatTime(reservation.reconciliation_checked_at)}</p>
+      <p>Sonraki kontrol için en erken: {formatTime(reservation.reconciliation_next_at)}</p>
+      {reservation.reconciliation_outcome === "lookup_failed" && <p>Son sorgu tamamlanamadı; sistem tekrar deneyecek.</p>}
+      {reservation.reconciliation_outcome === "unresolved" && <p>Kesin eşleşme bulunamadı. Bu, rezervasyonun reddedildiği anlamına gelmez.</p>}
+    </div>
+  );
 }
 
 function Banner({ kind, children, onClose }) {
@@ -27,25 +48,32 @@ function Banner({ kind, children, onClose }) {
 export default function MarketplaceReservationsPage() {
   const qc = useQueryClient();
   const [statusFilter, setStatusFilter] = useState("");
-  const [detail, setDetail] = useState(null);
+  const [detailId, setDetailId] = useState(null);
   const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelReason, setCancelReason] = useState("agency_request");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError: listFailed } = useQuery({
     queryKey: ["marketplace-reservations", statusFilter],
     queryFn: () => {
       const p = new URLSearchParams();
       if (statusFilter) p.set("status", statusFilter);
       return api.get(`/syroce-marketplace/reservations?${p}`).then((r) => r.data);
     },
+    refetchInterval: 30000,
+    refetchIntervalInBackground: false,
   });
 
-  const detailMut = useMutation({
-    mutationFn: (id) => api.get(`/syroce-marketplace/reservations/${id}`).then((r) => r.data),
-    onSuccess: (d) => setDetail(d),
-    onError: (err) => setError(apiErrorMessage(err) || "Detay alınamadı."),
+  const { data: detail, isLoading: detailLoading, isError: detailFailed } = useQuery({
+    queryKey: ["marketplace-reservation-detail", detailId],
+    queryFn: () => api.get(`/syroce-marketplace/reservations/${detailId}`).then((r) => r.data),
+    enabled: Boolean(detailId),
+    refetchInterval: (query) => {
+      const local = query.state.data?.local;
+      return local?.status === "pending" || local?.reconciliation_required ? 30000 : false;
+    },
+    refetchIntervalInBackground: false,
   });
 
   const cancelMut = useMutation({
@@ -54,6 +82,7 @@ export default function MarketplaceReservationsPage() {
       setSuccess("Rezervasyon iptal edildi.");
       setCancelTarget(null);
       qc.invalidateQueries({ queryKey: ["marketplace-reservations"] });
+      qc.invalidateQueries({ queryKey: ["marketplace-reservation-detail"] });
     },
     onError: (err) => setError(apiErrorMessage(err) || "İptal başarısız."),
   });
@@ -72,6 +101,7 @@ export default function MarketplaceReservationsPage() {
         <div className="flex gap-2">
           <select className="border rounded px-3 py-2 text-sm" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <option value="">Tümü</option>
+            <option value="pending">PMS onayı beklenenler</option>
             <option value="confirmed">Onaylı</option>
             <option value="cancelled">İptal</option>
             <option value="completed">Tamamlandı</option>
@@ -81,6 +111,8 @@ export default function MarketplaceReservationsPage() {
 
       {error && <Banner kind="error" onClose={() => setError("")}>{error}</Banner>}
       {success && <Banner kind="success" onClose={() => setSuccess("")}>{success}</Banner>}
+      {listFailed && <Banner kind="error">Liste yenilenemedi. Görünen kayıtlar güncel olmayabilir; bağlantı kurulduğunda yeniden denenecek.</Banner>}
+      <p className="text-xs text-gray-500">Liste, sayfa görünürken 30 saniyede bir yenilenir. PMS kontrolü sayfa kapalıyken de sunucuda devam eder.</p>
 
       <div className="bg-white border rounded-lg overflow-x-auto">
         <table className="w-full text-sm">
@@ -100,7 +132,7 @@ export default function MarketplaceReservationsPage() {
             {isLoading && (
               <tr><td colSpan={8} className="text-center py-6 text-gray-500"><Loader2 className="inline animate-spin" size={16} /> Yükleniyor...</td></tr>
             )}
-            {!isLoading && items.length === 0 && (
+            {!isLoading && !listFailed && items.length === 0 && (
               <tr><td colSpan={8} className="text-center py-8 text-gray-500">Henüz rezervasyon yok.</td></tr>
             )}
             {items.map((r) => (
@@ -111,12 +143,12 @@ export default function MarketplaceReservationsPage() {
                 <td className="px-3 py-2">{r.guest_name}<div className="text-xs text-gray-500">{r.guest_email}</div></td>
                 <td className="px-3 py-2 text-xs">{r.check_in} → {r.check_out}</td>
                 <td className="px-3 py-2 text-right">{r.total_amount != null ? `${Number(r.total_amount).toFixed(2)} TRY` : "-"}</td>
-                <td className="px-3 py-2 text-center"><StatusBadge status={r.status} /></td>
+                <td className="px-3 py-2 text-center"><StatusBadge status={r.status} reconciliationRequired={r.reconciliation_required} /></td>
                 <td className="px-3 py-2 text-right whitespace-nowrap">
-                  <button onClick={() => detailMut.mutate(r.id)} className="text-blue-600 hover:bg-blue-50 p-1 rounded" title="Detay">
+                  <button onClick={() => setDetailId(r.id)} className="text-blue-600 hover:bg-blue-50 p-1 rounded" title="Detay">
                     <Eye size={16} />
                   </button>
-                  {r.status !== "cancelled" && (
+                  {r.status !== "cancelled" && r.status !== "pending" && !r.reconciliation_required && r.syroce_reservation_id && (
                     <button onClick={() => { setCancelTarget(r); setCancelReason("agency_request"); }} className="text-red-600 hover:bg-red-50 p-1 rounded ml-1" title="İptal Et">
                       <Trash2 size={16} />
                     </button>
@@ -129,21 +161,24 @@ export default function MarketplaceReservationsPage() {
       </div>
 
       {/* Detail modal */}
-      {detail && (
+      {detailId && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto shadow-xl">
             <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white">
               <h3 className="font-semibold">Rezervasyon Detayı</h3>
-              <button onClick={() => setDetail(null)} className="text-gray-400 hover:text-gray-700"><X /></button>
+              <button onClick={() => setDetailId(null)} className="text-gray-400 hover:text-gray-700"><X /></button>
             </div>
             <div className="p-4 space-y-3 text-sm">
+              {detailLoading && <p>Detay yükleniyor...</p>}
+              {detailFailed && <Banner kind="error">Detay yenilenemedi. Görünen bilgiler güncel olmayabilir.</Banner>}
+              {detail?.local && <ReconciliationNotice reservation={detail.local} />}
               <div>
                 <div className="font-semibold mb-1">Yerel Kayıt</div>
-                <pre className="bg-gray-50 border rounded p-2 text-xs overflow-x-auto">{JSON.stringify(detail.local, null, 2)}</pre>
+                <pre className="bg-gray-50 border rounded p-2 text-xs overflow-x-auto">{JSON.stringify(detail?.local, null, 2)}</pre>
               </div>
               <div>
                 <div className="font-semibold mb-1">PMS Kaydı</div>
-                <pre className="bg-gray-50 border rounded p-2 text-xs overflow-x-auto">{JSON.stringify(detail.pms, null, 2)}</pre>
+                <pre className="bg-gray-50 border rounded p-2 text-xs overflow-x-auto">{JSON.stringify(detail?.pms, null, 2)}</pre>
               </div>
             </div>
           </div>
